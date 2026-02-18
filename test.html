@@ -1,0 +1,1088 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Uplink — Тренажёр экзамена (02.02.2026)</title>
+  <style>
+    :root{
+      --bg:#0f1419; --panel:#121b23; --panel2:#111a22;
+      --text:#e9edef; --muted:#9aa1a7; --border:#2a3641;
+      --accent:#0a86f9; --ok:#2ecc71; --bad:#ff5c5c; --warn:#f1c40f;
+      --radius:14px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:linear-gradient(180deg, #0f1419, #0b0f14); color:var(--text);
+    }
+    header{
+      position:sticky; top:0; z-index:5;
+      background:rgba(15,20,25,.85); backdrop-filter: blur(10px);
+      border-bottom:1px solid var(--border);
+    }
+    .wrap{max-width:1100px; margin:0 auto; padding:14px 16px;}
+    .row{display:flex; gap:12px; flex-wrap:wrap; align-items:center;}
+    .title{font-size:18px; font-weight:700;}
+    .pill{font-size:12px; padding:6px 10px; border:1px solid var(--border); border-radius:999px; color:var(--muted)}
+    .btn{
+      border:1px solid var(--border); background:var(--panel2); color:var(--text);
+      padding:10px 12px; border-radius:12px; cursor:pointer; transition:.15s;
+      user-select:none;
+    }
+    .btn:hover{border-color:#3a4a57; transform: translateY(-1px);}
+    .btn.primary{background:rgba(10,134,249,.12); border-color:rgba(10,134,249,.5);}
+    .btn.good{background:rgba(46,204,113,.12); border-color:rgba(46,204,113,.5);}
+    .btn.bad{background:rgba(255,92,92,.12); border-color:rgba(255,92,92,.5);}
+    .btn.ghost{background:transparent;}
+    .btn:disabled{opacity:.5; cursor:not-allowed; transform:none;}
+    input, select, textarea{
+      background:var(--panel2); color:var(--text); border:1px solid var(--border);
+      padding:10px 12px; border-radius:12px; outline:none;
+    }
+    input::placeholder, textarea::placeholder{color:#6f7a82}
+    textarea{width:100%; min-height:92px; resize:vertical;}
+    main .grid{display:grid; grid-template-columns: 1.2fr .8fr; gap:14px; align-items:start; padding:14px 16px;}
+    @media(max-width:900px){ main .grid{grid-template-columns:1fr;} }
+
+    .card{
+      background:linear-gradient(180deg, rgba(18,27,35,.95), rgba(17,26,34,.95));
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      padding:14px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+    }
+    .card h2{margin:0 0 10px; font-size:14px; color:var(--muted); font-weight:600; letter-spacing:.2px;}
+    .qText{font-size:18px; font-weight:700; margin:4px 0 10px; line-height:1.25;}
+    .meta{display:flex; gap:10px; flex-wrap:wrap; margin:6px 0 10px;}
+    .tag{font-size:12px; padding:6px 10px; border:1px solid var(--border); border-radius:999px; color:var(--muted)}
+    .hr{height:1px; background:var(--border); margin:12px 0;}
+    .hintBox, .answerBox, .checkBox{
+      border:1px dashed rgba(154,161,167,.35);
+      border-radius: 12px; padding:12px; background: rgba(255,255,255,.02);
+    }
+    .hintBox b, .answerBox b, .checkBox b{color:var(--muted); font-weight:700; font-size:12px; letter-spacing:.2px}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
+    .muted{color:var(--muted)}
+    .small{font-size:12px;}
+    .ok{color:var(--ok)}
+    .badTxt{color:var(--bad)}
+    .warnTxt{color:var(--warn)}
+    .scoreRow{display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+    .kpi{
+      flex:1; min-width:160px;
+      background:rgba(255,255,255,.02);
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:10px 12px;
+    }
+    .kpi .v{font-size:18px; font-weight:800;}
+    .kpi .l{font-size:12px; color:var(--muted); margin-top:2px;}
+    .list{
+      max-height: 340px; overflow:auto; border-radius:12px; border:1px solid var(--border);
+      background:rgba(255,255,255,.02);
+    }
+    .listItem{
+      padding:10px 12px; border-bottom:1px solid rgba(42,54,65,.6);
+      display:flex; gap:10px; align-items:flex-start;
+      cursor:pointer;
+    }
+    .listItem:last-child{border-bottom:none}
+    .listItem:hover{background:rgba(10,134,249,.06)}
+    .liN{font-size:12px; color:var(--muted); margin-top:2px; width:30px; flex:0 0 auto;}
+    .liT{font-size:13px; font-weight:700; line-height:1.2;}
+    .liS{font-size:12px; color:var(--muted); margin-top:4px;}
+    .active{outline:2px solid rgba(10,134,249,.5); background:rgba(10,134,249,.08);}
+    .toast{
+      position:fixed; right:16px; bottom:16px; z-index:10;
+      padding:10px 12px; border-radius:12px;
+      border:1px solid var(--border);
+      background:rgba(18,27,35,.95);
+      color:var(--text);
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+      max-width: 420px;
+      display:none;
+    }
+    .split{display:grid; grid-template-columns: 1fr 1fr; gap:12px;}
+    @media(max-width:700px){ .split{grid-template-columns:1fr;} }
+    .kbd{
+      font-size:12px; padding:2px 6px; border:1px solid var(--border); border-radius:8px; color:var(--muted);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="row" style="justify-content:space-between;">
+      <div class="row" style="gap:10px;">
+        <div class="title">Uplink — тренажёр экзамена</div>
+        <div class="pill">редакция: 02.02.2026</div>
+        <div class="pill">режимы: флешкарты / тест / поиск</div>
+      </div>
+      <div class="row" style="gap:8px;">
+        <button class="btn ghost" id="btnHotkeys">Горячие клавиши</button>
+        <button class="btn" id="btnExport">Экспорт прогресса</button>
+        <button class="btn" id="btnReset">Сброс</button>
+      </div>
+    </div>
+
+    <div class="row" style="margin-top:10px;">
+      <select id="mode">
+        <option value="flash">Флешкарты (вспоминай и сверяй)</option>
+        <option value="quiz">Тест (самопроверка)</option>
+      </select>
+      <input id="search" placeholder="Поиск по вопросам/ответам (например: IPTV, 2500, Качар, 90-23-23)" style="flex:1; min-width:260px;" />
+      <select id="filterCat">
+        <option value="all">Все категории</option>
+      </select>
+      <select id="order">
+        <option value="due">Сначала сложное/просроченное</option>
+        <option value="new">Сначала новое</option>
+        <option value="rand">Случайно</option>
+        <option value="num">По номеру</option>
+      </select>
+      <button class="btn primary" id="btnStart">Старт</button>
+      <button class="btn" id="btnPrev">←</button>
+      <button class="btn" id="btnNext">→</button>
+    </div>
+
+    <div class="row" style="margin-top:8px;">
+      <div class="pill">подсказка: <span class="kbd">H</span> • показать ответ: <span class="kbd">Space</span> • оценка: <span class="kbd">1</span>/<span class="kbd">2</span>/<span class="kbd">3</span></div>
+      <div class="pill">поиск: <span class="kbd">/</span> • следующая: <span class="kbd">N</span> • предыдущая: <span class="kbd">P</span></div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="grid">
+    <section class="card" id="mainCard">
+      <h2 id="modeTitle">Флешкарта</h2>
+      <div class="meta">
+        <div class="tag" id="qNum">#—</div>
+        <div class="tag" id="qCat">Категория: —</div>
+        <div class="tag" id="qState">Статус: —</div>
+      </div>
+
+      <div class="qText" id="question">Нажми “Старт”</div>
+
+      <div class="split">
+        <div class="hintBox">
+          <b>ПОДСКАЗКА (H)</b>
+          <div id="hint" class="muted" style="margin-top:6px;">—</div>
+        </div>
+        <div class="answerBox">
+          <b>ОТВЕТ (Space)</b>
+          <div id="answer" style="margin-top:6px;">—</div>
+        </div>
+      </div>
+
+      <div class="hr"></div>
+
+      <div class="checkBox">
+        <b>ТВОЙ ОТВЕТ / САМОПРОВЕРКА</b>
+        <div class="small muted" style="margin-top:6px;">В режиме “Тест” пиши ответ сюда и жми “Проверить”. В “Флешкартах” поле тоже можно использовать, но оценка вручную.</div>
+        <div style="margin-top:10px;">
+          <textarea id="userAnswer" placeholder="Напиши ответ своими словами (коротко и по фактам)."></textarea>
+        </div>
+        <div class="row" style="margin-top:10px;">
+          <button class="btn primary" id="btnCheck">Проверить</button>
+          <button class="btn" id="btnShowHint">Подсказка (H)</button>
+          <button class="btn" id="btnShowAnswer">Показать ответ (Space)</button>
+        </div>
+        <div id="checkResult" class="small" style="margin-top:10px;"></div>
+      </div>
+
+      <div class="hr"></div>
+
+      <div class="row" style="justify-content:space-between;">
+        <div class="row">
+          <button class="btn bad" id="btnAgain">1: Не знаю</button>
+          <button class="btn" id="btnHard">2: Частично</button>
+          <button class="btn good" id="btnGood">3: Знаю</button>
+        </div>
+        <div class="row">
+          <span class="pill">подсказки: <span id="hintUsed">0</span></span>
+          <span class="pill">показов ответа: <span id="ansUsed">0</span></span>
+        </div>
+      </div>
+    </section>
+
+    <aside class="card">
+      <h2>Прогресс</h2>
+      <div class="scoreRow">
+        <div class="kpi">
+          <div class="v" id="kpiTotal">0</div>
+          <div class="l">всего вопросов</div>
+        </div>
+        <div class="kpi">
+          <div class="v" id="kpiDue">0</div>
+          <div class="l">нужно повторить</div>
+        </div>
+        <div class="kpi">
+          <div class="v" id="kpiMastered">0</div>
+          <div class="l">выучено (>=3 подряд)</div>
+        </div>
+      </div>
+
+      <div class="hr"></div>
+
+      <h2>Список вопросов (клик = перейти)</h2>
+      <div class="list" id="qList"></div>
+
+      <div class="hr"></div>
+
+      <h2>Мини-памятка (самые частые ловушки)</h2>
+      <div class="small muted" id="cheat">
+        1) IPTV бесплатно с 01.02.2026 — только на Rakhmet (особенно держи в голове Мичуринское/Тобыл/Октябрьский).<br/>
+        2) Качар: списания “с 16 по 16”.<br/>
+        3) Кабельное ТВ — только Костанай и Кунай. IPTV нет в Лисаковске и Качаре. Умный дом только Костанай/Кунай/Качар.<br/>
+        4) Терминалы (HGU/SFU/ONU) ставим только на GPON; Ethernet — терминалов нет.<br/>
+        5) Роутер 100 Мбит (14 000) — только Лисаковск МКД и Качар МКД.
+      </div>
+    </aside>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  // ========= ДАННЫЕ: ВОПРОСЫ/ОТВЕТЫ (02.02.2026) =========
+  // Важно: тут “эталонные” ответы, которыми сверяешься.
+  // Если в вашей компании что-то обновят — правишь только этот массив.
+  const QUESTIONS = [
+    {
+      id: "q00",
+      cat: "Речь/старт",
+      q: "0.0 Что сказать в начале разговора (вежливый старт)?",
+      hint: "Одна фраза приветствия + компания.",
+      a: "Здравствуйте! Как вы? Всё хорошо? Компания «Кабельные Сети Костаная» / ТОО «Uplink»."
+    },
+
+    // Контакты
+    {
+      id: "q01",
+      cat: "Контакты",
+      q: "1) Номера телефонов по городам и корпоративные клиенты",
+      hint: "4 номера: Костанай/Лисаковск/Качар/корп.",
+      a: "Костанай: 22-08-60. Лисаковск: 2-00-60. Качар: 3-90-90. Корпоративные клиенты: 90-23-23."
+    },
+    {
+      id: "q02",
+      cat: "Контакты",
+      q: "2) WhatsApp, Telegram, Instagram, VK (точные названия)",
+      hint: "WhatsApp один, Telegram — бот, соцсети 2.",
+      a: "WhatsApp техподдержка: +7 771 058 15 55. Telegram бот: uplinkkz_bot. Instagram: @uplink.kzt. VK: up_link_kz."
+    },
+    {
+      id: "q03",
+      cat: "Контакты/оплата",
+      q: "3) Что такое 220860 и когда используется?",
+      hint: "Про ключи/акты, если нет лицевого.",
+      a: "220860 — лицевой/договор для зачисления оплаты по акту, если у абонента нет лицевого счёта по Интернет или «Умный дом» (часто при продаже ключей)."
+    },
+
+    // География и услуги
+    {
+      id: "q04",
+      cat: "География",
+      q: "4) Где представлена компания (все населённые пункты)?",
+      hint: "Всего 9 пунктов.",
+      a: "Костанай, Кунай, Амангельды, Дружба, Мичуринское, Тобыл, Лисаковск, Октябрьский, Качар."
+    },
+    {
+      id: "q05",
+      cat: "Услуги по пунктам",
+      q: "5) Где есть Кабельное ТВ, а где его нет?",
+      hint: "Кабельное — только в 2 местах.",
+      a: "Кабельное ТВ есть только в Костанае и Кунае. В остальных пунктах кабельного ТВ нет."
+    },
+    {
+      id: "q06",
+      cat: "Услуги по пунктам",
+      q: "6) Где есть IPTV Portal, а где его нет?",
+      hint: "IPTV нет ровно в 2 местах.",
+      a: "IPTV Portal есть: Костанай, Кунай, Амангельды, Дружба, Мичуринское, Тобыл, Октябрьский. IPTV Portal нет: Лисаковск, Качар."
+    },
+    {
+      id: "q07",
+      cat: "Услуги по пунктам",
+      q: "7) Где есть «Умный дом», а где его нет?",
+      hint: "Умный дом — только 3 пункта.",
+      a: "«Умный дом» есть: Костанай, Кунай, Качар. Нет: Амангельды, Дружба, Мичуринское, Тобыл, Лисаковск, Октябрьский."
+    },
+
+    // Офисы/кассы
+    {
+      id: "q08",
+      cat: "Кассы/офисы",
+      q: "8) Адреса офисов/пунктов оплаты (все точки)",
+      hint: "Костанай 4, плюс Лисаковск и Качар.",
+      a: "Костанай: Чкалова 16; Маяковского 120; Толстого 53; Каирбекова 383/2. Лисаковск: 3 мкрн, дом 12. Качар: ТЦ «Домовой», 3 этаж, бутик №7."
+    },
+    {
+      id: "q09",
+      cat: "Кассы",
+      q: "9) Кассы: ориентиры (где есть ориентир — даём ориентир)",
+      hint: "Костанай 4 ориентира + Лисаковск + Качар.",
+      a: "Костанай: «9 мкрн, 10-этажный дом, напротив горводоканала»; «магазин Бахыт»; «аптека Цветная, AidanaPlaza»; «аптека Цветная». Лисаковск: «3 мкрн, дом 12, вход со стороны парка, справа от проходного подъезда». Качар: «ТЦ Домовой, 3 этаж, бутик №7»."
+    },
+
+    // Тарифы интернет 01.02.2026
+    {
+      id: "q10",
+      cat: "Интернет/тарифы",
+      q: "10) Тарифы интернета с 01.02.2026: скорость и цена (3 тарифа)",
+      hint: "100/300/500 и 5000/6500/8500.",
+      a: "Комфортный: до 100 Мбит/с — 5000 тг/мес. Rakhmet: до 300 Мбит/с — 6500 тг/мес (IPTV Portal бонусом). Элитный: до 500 Мбит/с — 8500 тг/мес."
+    },
+    {
+      id: "q11",
+      cat: "Интернет/тарифы",
+      q: "11) Что происходит с тарифом «Люкс» после 01.02.2026?",
+      hint: "Перевод на другой тариф.",
+      a: "Все абоненты, которые до 01.02.2026 пользовались ТП «Люкс», переходят на ТП «Элитный»."
+    },
+    {
+      id: "q12",
+      cat: "Интернет/Качар",
+      q: "12) Тарифы интернета в Качаре (после 01.02.2026)",
+      hint: "Только 2 тарифа.",
+      a: "Качар (МКД Ethernet): Комфортный (до 100) — 5000; Элитный (до 500) — 8500. Тарифа Rakhmet в Качаре нет."
+    },
+
+    // Подключение интернет
+    {
+      id: "q13",
+      cat: "Интернет/подключение",
+      q: "13) Стоимость подключения интернета (до роутера / от роутера)",
+      hint: "До — бесплатно. От — по акту.",
+      a: "До роутера: бесплатно. От роутера: согласно акту (пример: 8-жильный кабель 150 тг/м)."
+    },
+    {
+      id: "q14",
+      cat: "Интернет/кабель",
+      q: "14) Где 4-жильный кабель бесплатный?",
+      hint: "Два пункта и оба — Ethernet МКД.",
+      a: "Бесплатный 4-жильный кабель: Лисаковск МКД Ethernet и Качар МКД Ethernet."
+    },
+    {
+      id: "q15",
+      cat: "Интернет/частный сектор",
+      q: "15) Частный сектор — подключение бесплатное или нет (по этой редакции)?",
+      hint: "Смотри “до роутера”.",
+      a: "По редакции 02.02.2026: до роутера бесплатно, в том числе в частном секторе."
+    },
+
+    // Технологии и терминалы
+    {
+      id: "q16",
+      cat: "Технологии",
+      q: "16) Где какая технология: Ethernet/GPON (по территориям)?",
+      hint: "Костанай МКД: Ethernet или GPON. Лисаковск МКД: Ethernet. Остальной частный сектор: GPON.",
+      a: "Костанай МКД: Ethernet или GPON. Костанай частный сектор (Амангельды, Дружба, Мичуринское, Тобыл): GPON. Лисаковск МКД: Ethernet. Лисаковск коттеджи: GPON. Октябрьский: GPON. Качар МКД: Ethernet."
+    },
+    {
+      id: "q17",
+      cat: "Терминалы",
+      q: "17) Где ставим терминалы (HGU/SFU/ONU) и где НЕ ставим?",
+      hint: "Только GPON. На Ethernet терминалов нет.",
+      a: "Терминалы (HGU/SFU/ONU) ставим только на GPON. На Ethernet терминалы не ставим — там только роутер."
+    },
+
+    // Оборудование и цены
+    {
+      id: "q18",
+      cat: "Оборудование",
+      q: "18) Роутер 1 Гбит: цена продажи и аренды, кому аренда доступна",
+      hint: "18 000 и 500/мес; квартировладелец/арендатор.",
+      a: "2-диапазонный роутер 1 Гбит: продажа 18 000 тг; аренда 500 тг/мес (квартировладелец/арендатор)."
+    },
+    {
+      id: "q19",
+      cat: "Оборудование",
+      q: "19) Роутер 100 Мбит: цена продажи и аренды; где используется",
+      hint: "14 000 и 500/мес; Лисаковск+Качар (МКД Ethernet).",
+      a: "2-диапазонный роутер 100 Мбит: продажа 14 000 тг; аренда 500 тг/мес. Используется в Лисаковске МКД Ethernet и Качаре МКД Ethernet."
+    },
+    {
+      id: "q20",
+      cat: "Оборудование/GPON",
+      q: "20) HGU (терминал): цена продажи и аренды; где ставим (включая исключения)",
+      hint: "20 000 и 500/мес; Костанай МКД GPON; Мичуринское Байтерек многоэтажки.",
+      a: "HGU терминал 1 Гбит: продажа 20 000 тг; аренда 500 тг/мес. Ставим: Костанай МКД GPON; в Мичуринском — только мкрн «Байтерек», многоэтажные дома."
+    },
+    {
+      id: "q21",
+      cat: "Оборудование/GPON",
+      q: "21) SFU/ONU («онушка»): цена и условие предоставления; где встречается",
+      hint: "12 000 + ответственное хранение (собственник).",
+      a: "SFU/ONU: продажа 12 000 тг; условие — ответственное хранение (собственник). Встречается: Костанай GPON (в т.ч. Абая 111; у некоторых Каирбекова 387/1), Костанай частный сектор GPON, Лисаковск коттеджи GPON, Октябрьский GPON."
+    },
+    {
+      id: "q22",
+      cat: "Исключения",
+      q: "22) Какие важные исключения по адресу Абая 111 / Каирбекова 387/1?",
+      hint: "Там отдельно упомянуты устройство и условия.",
+      a: "Абая 111: в блоке GPON отдельно упомянуты 1 Гбит роутер и SFU/ONU как отдельный кейс. Каирбекова 387/1: SFU/ONU встречается у некоторых абонентов."
+    },
+
+    // Списания
+    {
+      id: "q23",
+      cat: "Оплата/списания",
+      q: "23) Какие типы списаний есть и к чему относятся (кратко)?",
+      hint: "ЕМС пропорц.дням / ЕДС ежедневно / ТВ фиксировано.",
+      a: "Интернет/умный дом/аренда: ежемесячные пропорционально дням (ЕМС). Телевидение: ежемесячные фиксированные. Интернет на «Комфортный» может быть на ежедневных списаниях (ЕДС)."
+    },
+    {
+      id: "q24",
+      cat: "Оплата/списания",
+      q: "24) Особенность Качара по списаниям",
+      hint: "16 по 16.",
+      a: "Качар: ежемесячные списания пропорционально дням «с 16 по 16»."
+    },
+
+    // ТВ
+    {
+      id: "q25",
+      cat: "ТВ",
+      q: "25) Абонплата ТВ: кабельное и IPTV Portal (и когда IPTV бесплатно)",
+      hint: "2000/2000; IPTV бесплатно на Rakhmet (после 01.02.2026).",
+      a: "Кабельное ТВ: 2000 тг/мес. IPTV Portal: 2000 тг/мес. IPTV Portal бесплатно как бонус на тарифе Rakhmet (с 01.02.2026)."
+    },
+    {
+      id: "q26",
+      cat: "ТВ",
+      q: "26) Стоимость первичного подключения ТВ",
+      hint: "2500.",
+      a: "Первичное подключение ТВ: 2500 тг (расходные материалы + остаток на лицевой счёт в счёт оплаты тарифа)."
+    },
+    {
+      id: "q27",
+      cat: "ТВ",
+      q: "27) Что такое IPTV Portal и какие доп. возможности есть?",
+      hint: "Архив/пауза/перемотка.",
+      a: "IPTV Portal — просмотр ТВ через приложение по интернету. Доп. возможности: архив передач на сутки, пауза и перемотка."
+    },
+    {
+      id: "q28",
+      cat: "ТВ",
+      q: "28) Сколько архив IPTV?",
+      hint: "24 часа.",
+      a: "Архив IPTV: 1 сутки (24 часа)."
+    },
+    {
+      id: "q29",
+      cat: "ТВ",
+      q: "29) Случай “кабельное + IPTV вместе”: сколько платит абонент с интернетом Uplink и без него?",
+      hint: "С интернетом 2000, без — 4000.",
+      a: "Если подключены IPTV Portal + кабельное ТВ: без интернета Uplink — 4000 тг/мес; с интернетом Uplink — 2000 тг/мес."
+    },
+    {
+      id: "q30",
+      cat: "ТВ/IPTV бесплатно",
+      q: "30) В чём точная логика “IPTV бесплатно” после 01.02.2026 (особенно Мичуринское/Тобыл/Октябрьский)?",
+      hint: "Только Rakhmet для новых; “старым” сохраняют, если до даты.",
+      a: "С 01.02.2026 IPTV Portal бесплатный бонус только на тарифе Rakhmet. Для Мичуринского/Тобыла/Октябрьского: на других тарифах бесплатность сохраняется только у абонентов, подключённых до 01.02.2026; новым абонентам на других тарифах после 01.02.2026 бесплатно не будет."
+    },
+
+    // Умный дом
+    {
+      id: "q31",
+      cat: "Умный дом",
+      q: "31) Что такое «Умный дом» и из чего состоит?",
+      hint: "умный домофон + ПО + приложение.",
+      a: "«Умный дом» — доступ к системе «умный домофон» через программный комплекс и мобильное приложение «Мой умный дом» (ПО, базы данных и др.)."
+    },
+    {
+      id: "q32",
+      cat: "Умный дом",
+      q: "32) Ключевые функции «Умного дома» (коротко списком)",
+      hint: "видеозвонок/открытие/архив 5 дней/ссылка 24ч/свободные руки/гостевой доступ.",
+      a: "Видеозвонок; открытие двери при звонке и без звонка; просмотр онлайн и архив до 5 дней; временная ссылка на 24 часа; «Свободные руки»; установка на неограниченное число устройств; «Гостевой доступ» (несколько адресов при оплате каждого)."
+    },
+    {
+      id: "q33",
+      cat: "Умный дом",
+      q: "33) Техусловия для «Умного дома» (что должно быть у абонента)?",
+      hint: "панель + приложение + интернет любого оператора.",
+      a: "Должна быть установлена система «умный домофон»; у абонента приложение «Мой умный дом» (Android 6+ / iOS 14+); наличие действующего интернета любого оператора."
+    },
+    {
+      id: "q34",
+      cat: "Умный дом/Костанай",
+      q: "34) Тарифы и цены «Умный дом» (Костанай): 1000/500/350 и установки/ключи",
+      hint: "1000 без интернета, 500 для наших, 350 трубка.",
+      a: "Костанай: «Умный дом» 1000 тг/мес (если нет интернета Uplink); «Умный дом» для наших интернет-абонентов 500 тг/мес; «Аналоговая трубка» 350 тг/мес. Установка панели 0. Трубка абонента 2000 (кроме домов-исключений). Трубка компании 6000 (кроме исключений). Ключ 1000."
+    },
+    {
+      id: "q35",
+      cat: "Умный дом/Качар",
+      q: "35) Тарифы и цены «Умный дом» (Качар): подключение до/после закрытия, тариф, годовой, ключ",
+      hint: "10 000/15 000; 800/мес; 6000/год; ключ 1000.",
+      a: "Качар: подключение услуги до/после закрытия панели 10 000 / 15 000 тг (включает 1 ключ). Тариф 800 тг/мес. Годовой 6000 тг/год (первая волна). Ключ 1000. Трубка абонента 2000, трубка компании 6000."
+    },
+    {
+      id: "q36",
+      cat: "Умный дом/ключи",
+      q: "36) Где и как приобрести ключи (Костанай: Чкалова 16/менеджер/доставка; Качар: Домовой/бригадир)",
+      hint: "2 города, 3 способа в Костанае.",
+      a: "Костанай: Чкалова 16; у менеджера в назначенное время/дату по адресу установки панели; доставка с момента установки до закрытия панели (обычно до 2 рабочих дней), после закрытия — низкий приоритет (если СИ по пути). Качар: ТЦ «Домовой», 3 этаж, бутик №7; у бригадира до закрытия панели."
+    },
+    {
+      id: "q37",
+      cat: "Умный дом/ключи",
+      q: "37) Как оплачиваются ключи и что делать, если нет лицевого счёта?",
+      hint: "На лицевой интернет/УД, иначе 220860.",
+      a: "Оплата ключей зачисляется на лицевой счёт услуги Интернет или «Умный дом». Если у абонента нет лицевого — в акте указывают 220860 и оплата поступает на него."
+    },
+    {
+      id: "q38",
+      cat: "Умный дом/подключение подъезда",
+      q: "38) Условия подключения подъезда к «Умному дому» (проценты 36 квартир / меньше 36)",
+      hint: ">=36: 51% + 2/3. <36: 80% + 100 ключей + 2/3.",
+      a: "Если ≥36 квартир: 51% подключивших услугу на тарифах 500/1000 + 2/3 подъезда согласны (или 51% дома при установке на дом). Если <36 квартир: 80% подключивших + минимум 100 ключей на подъезд + 2/3 подъезда согласны (или 51% дома при установке на дом)."
+    },
+
+    // VIP и белый IP
+    {
+      id: "q39",
+      cat: "VIP",
+      q: "39) Что такое VIP-услуга и когда доступна?",
+      hint: "Элитный или полгода/год.",
+      a: "VIP — ряд бесплатных услуг, доступных абонентам на тарифе «Элитный» или при подключении Полугодового/Годового контракта."
+    },
+    {
+      id: "q40",
+      cat: "VIP",
+      q: "40) Пример VIP: восстановление ОС (цена/бесплатно) и смысл",
+      hint: "3500 → 0 на Элитном.",
+      a: "Восстановление операционной системы: 3500 тг на обычных условиях, бесплатно (0) на «Элитный» (и при полугодовом/годовом контракте)."
+    },
+    {
+      id: "q41",
+      cat: "Белый IP",
+      q: "41) Белый IP: где бесплатно и где платно (и что нужно сделать)?",
+      hint: "Люкс/Элитный бесплатно по запросу; Рахмет/Комфортный +2000 и заявление.",
+      a: "На ТП «Люкс» и «Элитный» белый IP бесплатно по запросу (как бонус). На ТП «Rakhmet» и «Комфортный» — +2000 тг к тарифу, нужно написать заявление."
+    },
+
+    // Акции
+    {
+      id: "q42",
+      cat: "Акции",
+      q: "42) «Под ремонт»: что это и сроки (2+2)",
+      hint: "Заморозка 2 месяца + продление 2.",
+      a: "«Под ремонт»: клиент оплачивает тариф, лицевой счёт замораживается до окончания ремонта на срок до 2 месяцев с возможностью продления ещё на 2 по заявлению. Затем оформляют заявку на установку/активацию; после 2 месяцев автоматически списывается оплата за будущий месяц и услуга запускается."
+    },
+    {
+      id: "q43",
+      cat: "Акции",
+      q: "43) «Сертификат 2500» (Костанай): на что действует и как оформить?",
+      hint: "Скидка на первичное подключение ТВ. Пометка в заявке.",
+      a: "«Сертификат 2500» — скидка на первичное подключение кабельного ТВ: при одновременном подключении интернета и ТВ или при подключении ТВ для действующих интернет-абонентов. Менеджер указывает в заявке пометку «Сертификат 2500». Если материалов меньше — разница не компенсируется; если больше — клиент доплачивает."
+    },
+    {
+      id: "q44",
+      cat: "Акции",
+      q: "44) «Приведи друга» (сроки и условия бонуса)",
+      hint: "01.01–01.04.2026, месяц обоим, указать номер договора.",
+      a: "«Приведи друга» (01.01.2026–01.04.2026): действующий абонент интернета (от 1 месяца) или оплативший первый месяц передаёт другу номер договора; друг указывает его при оформлении. После подключения друга обоим начисляется 1 бонусный месяц."
+    },
+    {
+      id: "q45",
+      cat: "Акции",
+      q: "45) Полугодовой/годовой контракт (суть и что важно про досрочную смену тарифа)",
+      hint: "Бонусные месяцы за предоплату; при смене — перерасчёт без бонуса.",
+      a: "Полугодовой/годовой контракт: бонусные месяцы в подарок при полной предоплате. Действует только при единовременной оплате; можно продлевать новой предоплатой. При досрочной смене тарифа — перерасчёт по стандартным условиям без учёта бонусного периода; «добровольная заморозка» в период акции недоступна."
+    },
+
+    // Политика замены роутеров (часто спрашивают)
+    {
+      id: "q46",
+      cat: "Роутеры/замена",
+      q: "46) Политика замены роутеров: что в приоритете и когда новый?",
+      hint: "Приоритет б/у. Новый — дефект <3 месяцев или нет б/у и срочно.",
+      a: "Приоритет — проверенные б/у роутеры после диагностики и одобрения IT. Новый роутер — если абонент подключён менее 3 месяцев, купил новый у компании и выявлен заводской/скрытый дефект; либо если нет исправных б/у и нужна срочная замена (редко, нежелательно)."
+    },
+
+    // Термины
+    {
+      id: "q47",
+      cat: "Термины",
+      q: "47) Мбит и Мбайт: что меньше/что используется в тарифах?",
+      hint: "В тарифах — Мбит/с.",
+      a: "В тарифах скорость указывается в Мбит/с. Мбайт — объём данных, это другое. Для скорости всегда говорим Мбит/с."
+    }
+  ];
+
+  // ========= НАСТРОЙКИ/ПРОГРЕСС =========
+  const STORAGE_KEY = "uplink_exam_trainer_v1";
+  const now = () => Date.now();
+
+  function loadState(){
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw){
+      const init = {};
+      for(const it of QUESTIONS){
+        init[it.id] = {
+          seen: 0,
+          streak: 0,
+          ease: 2.0,     // простая “легкость”
+          interval: 0,   // ms
+          due: 0,        // timestamp
+          hintUsed: 0,
+          ansUsed: 0,
+          lastScore: 0
+        };
+      }
+      return { idx: 0, mode: "flash", order: "due", filterCat:"all", search:"", stats:init };
+    }
+    try{
+      const parsed = JSON.parse(raw);
+      // доп. защита: добавим новые вопросы
+      if(!parsed.stats) parsed.stats = {};
+      for(const it of QUESTIONS){
+        if(!parsed.stats[it.id]){
+          parsed.stats[it.id] = { seen:0, streak:0, ease:2.0, interval:0, due:0, hintUsed:0, ansUsed:0, lastScore:0 };
+        }
+      }
+      return parsed;
+    }catch(e){
+      localStorage.removeItem(STORAGE_KEY);
+      return loadState();
+    }
+  }
+
+  function saveState(){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  function toast(msg){
+    const el = document.getElementById("toast");
+    el.innerHTML = msg;
+    el.style.display = "block";
+    clearTimeout(toast._t);
+    toast._t = setTimeout(()=> el.style.display="none", 2600);
+  }
+
+  // Простая система повторения:
+  // score 1 (не знаю) => interval 5 мин
+  // score 2 (частично) => interval * 1.5 (минимум 30 мин)
+  // score 3 (знаю) => interval * ease (минимум 8 часов), streak++
+  // ease поднимается на 3, падает на 1.
+  function applyReview(qid, score){
+    const s = state.stats[qid];
+    s.seen += 1;
+    s.lastScore = score;
+
+    const MIN_1 = 5 * 60 * 1000;
+    const MIN_2 = 30 * 60 * 1000;
+    const MIN_3 = 8 * 60 * 60 * 1000;
+
+    if(score === 1){
+      s.streak = 0;
+      s.ease = Math.max(1.3, s.ease - 0.2);
+      s.interval = MIN_1;
+    }else if(score === 2){
+      s.streak = Math.max(0, s.streak - 1);
+      s.ease = Math.max(1.3, s.ease - 0.05);
+      s.interval = Math.max(MIN_2, Math.round((s.interval || MIN_2) * 1.5));
+    }else if(score === 3){
+      s.streak += 1;
+      s.ease = Math.min(2.8, s.ease + 0.08);
+      const base = s.interval || MIN_3;
+      s.interval = Math.max(MIN_3, Math.round(base * s.ease));
+    }
+    s.due = now() + s.interval;
+  }
+
+  // ========= UI =========
+  const $ = (id) => document.getElementById(id);
+
+  const state = loadState();
+
+  // Fill filters
+  const cats = Array.from(new Set(QUESTIONS.map(q=>q.cat))).sort((a,b)=>a.localeCompare(b,"ru"));
+  for(const c of cats){
+    const opt = document.createElement("option");
+    opt.value = c; opt.textContent = c;
+    $("filterCat").appendChild(opt);
+  }
+
+  // restore ui
+  $("mode").value = state.mode;
+  $("order").value = state.order;
+  $("filterCat").value = state.filterCat;
+  $("search").value = state.search;
+
+  // view flags
+  let showHint = false;
+  let showAnswer = false;
+
+  function buildPool(){
+    const q = state.search.trim().toLowerCase();
+    const cat = state.filterCat;
+    let pool = QUESTIONS.filter(it => {
+      if(cat !== "all" && it.cat !== cat) return false;
+      if(!q) return true;
+      const hay = (it.q + " " + it.a + " " + it.hint).toLowerCase();
+      return hay.includes(q);
+    });
+
+    const order = state.order;
+    if(order === "num"){
+      pool.sort((a,b)=> QUESTIONS.findIndex(x=>x.id===a.id) - QUESTIONS.findIndex(x=>x.id===b.id));
+    }else if(order === "new"){
+      pool.sort((a,b)=> (state.stats[a.id].seen - state.stats[b.id].seen));
+    }else if(order === "rand"){
+      pool = pool
+        .map(x=>({x, r:Math.random()}))
+        .sort((a,b)=>a.r-b.r)
+        .map(o=>o.x);
+    }else { // due
+      pool.sort((a,b)=> (state.stats[a.id].due||0) - (state.stats[b.id].due||0));
+    }
+    return pool;
+  }
+
+  let pool = buildPool();
+
+  function setIdxById(qid){
+    const i = pool.findIndex(x=>x.id===qid);
+    if(i >= 0){ state.idx = i; saveState(); render(); }
+  }
+
+  function current(){
+    pool = buildPool();
+    if(pool.length === 0) return null;
+    if(state.idx >= pool.length) state.idx = 0;
+    return pool[state.idx];
+  }
+
+  function fmtState(qid){
+    const s = state.stats[qid];
+    const due = s.due ? new Date(s.due) : null;
+    const dueTxt = due ? due.toLocaleString("ru-RU") : "сейчас";
+    const st = [];
+    if((s.due||0) <= now()) st.push("повторить");
+    else st.push("ждёт: " + dueTxt);
+    st.push("просмотров: " + s.seen);
+    st.push("серия: " + s.streak);
+    return st.join(" • ");
+  }
+
+  function updateKPIs(){
+    $("kpiTotal").textContent = QUESTIONS.length;
+
+    let due = 0, mastered = 0;
+    for(const it of QUESTIONS){
+      const s = state.stats[it.id];
+      if((s.due||0) <= now()) due++;
+      if((s.streak||0) >= 3) mastered++;
+    }
+    $("kpiDue").textContent = due;
+    $("kpiMastered").textContent = mastered;
+  }
+
+  function renderList(){
+    const list = $("qList");
+    list.innerHTML = "";
+    const cur = current();
+    const curId = cur ? cur.id : null;
+
+    pool.forEach((it, idx) => {
+      const s = state.stats[it.id];
+      const due = (s.due||0) <= now();
+      const div = document.createElement("div");
+      div.className = "listItem" + (it.id===curId ? " active" : "");
+      div.innerHTML = `
+        <div class="liN">#${String(QUESTIONS.findIndex(x=>x.id===it.id)+1).padStart(2,"0")}</div>
+        <div style="flex:1;">
+          <div class="liT">${escapeHtml(it.q)}</div>
+          <div class="liS">${escapeHtml(it.cat)} • ${due ? "нужно повторить" : "отложено"} • серия ${s.streak||0}</div>
+        </div>
+      `;
+      div.onclick = () => { state.idx = idx; saveState(); render(); };
+      list.appendChild(div);
+    });
+  }
+
+  function resetViewFlags(){
+    showHint = false;
+    showAnswer = false;
+    $("userAnswer").value = "";
+    $("checkResult").innerHTML = "";
+  }
+
+  function render(){
+    updateKPIs();
+    renderList();
+
+    const cur = current();
+    if(!cur){
+      $("question").textContent = "Ничего не найдено по фильтрам/поиску.";
+      $("hint").textContent = "—";
+      $("answer").textContent = "—";
+      $("qNum").textContent = "#—";
+      $("qCat").textContent = "Категория: —";
+      $("qState").textContent = "Статус: —";
+      return;
+    }
+
+    const num = QUESTIONS.findIndex(x=>x.id===cur.id)+1;
+    $("qNum").textContent = "#" + String(num).padStart(2,"0");
+    $("qCat").textContent = "Категория: " + cur.cat;
+    $("qState").textContent = "Статус: " + fmtState(cur.id);
+
+    $("modeTitle").textContent = state.mode === "quiz" ? "Тест" : "Флешкарта";
+    $("question").textContent = cur.q;
+
+    $("hint").textContent = showHint ? cur.hint : "Скрыто. Нажми H / кнопку подсказки.";
+    $("answer").innerHTML = showAnswer ? formatAnswer(cur.a) : "Скрыто. Нажми Space / кнопку ответа.";
+
+    const st = state.stats[cur.id];
+    $("hintUsed").textContent = st.hintUsed || 0;
+    $("ansUsed").textContent = st.ansUsed || 0;
+  }
+
+  function formatAnswer(a){
+    // немножко “вёрстки” внутри блока (без markdown)
+    const lines = a.split("\n").map(x=>x.trim()).filter(Boolean);
+    if(lines.length <= 1) return escapeHtml(a);
+    return "<div>" + lines.map(l=>`<div style="margin:4px 0;">• ${escapeHtml(l)}</div>`).join("") + "</div>";
+  }
+
+  function escapeHtml(s){
+    return String(s)
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;");
+  }
+
+  function showHintNow(){
+    const cur = current(); if(!cur) return;
+    if(!showHint){
+      showHint = true;
+      state.stats[cur.id].hintUsed = (state.stats[cur.id].hintUsed||0) + 1;
+      saveState();
+      render();
+    }
+  }
+
+  function showAnswerNow(){
+    const cur = current(); if(!cur) return;
+    if(!showAnswer){
+      showAnswer = true;
+      state.stats[cur.id].ansUsed = (state.stats[cur.id].ansUsed||0) + 1;
+      saveState();
+      render();
+    }
+  }
+
+  function move(delta){
+    if(pool.length === 0) return;
+    state.idx = (state.idx + delta + pool.length) % pool.length;
+    saveState();
+    resetViewFlags();
+    render();
+  }
+
+  function review(score){
+    const cur = current(); if(!cur) return;
+    applyReview(cur.id, score);
+    saveState();
+    const msg = score===3 ? "Записал: ЗНАЮ ✅" : score===2 ? "Записал: ЧАСТИЧНО ⚠️" : "Записал: НЕ ЗНАЮ ❌";
+    toast(msg);
+    resetViewFlags();
+    // после оценки автоматически — следующая
+    move(1);
+  }
+
+  // Проверка (мягкая): подсветить, что из ключевых “якорей” присутствует
+  // Для каждого вопроса можно задать anchors: если не задано — авто по цифрам/ключевым словам.
+  const ANCHORS = {
+    q01: ["22-08-60","2-00-60","3-90-90","90-23-23"],
+    q02: ["8771","uplinkkz_bot","@uplink.kzt","up_link_kz"],
+    q03: ["220860"],
+    q04: ["Костанай","Кунай","Амангельды","Дружба","Мичуринское","Тобыл","Лисаковск","Октябрьский","Качар"],
+    q05: ["Костанай","Кунай","только"],
+    q06: ["Костанай","Кунай","Амангельды","Дружба","Мичуринское","Тобыл","Октябрьский","Лисаковск","Качар","нет"],
+    q07: ["Костанай","Кунай","Качар"],
+    q10: ["100","5000","300","6500","500","8500","Rakhmet","Комфортный","Элитный"],
+    q12: ["Качар","Комфортный","Элитный","5000","8500","Rakhmet","нет"],
+    q13: ["бесплатно","акт","150"],
+    q14: ["Лисаковск","Качар","4"],
+    q19: ["14000","500","Лисаковск","Качар"],
+    q20: ["20000","500","Костанай","Байтерек","Мичуринское"],
+    q21: ["12000","ответственное хранение","собственник","Абая","Октябрьский"],
+    q24: ["16","по 16","Качар"],
+    q26: ["2500"],
+    q28: ["сутки","24"],
+    q29: ["4000","2000"],
+    q30: ["01.02.2026","Rakhmet","Мичуринское","Тобыл","Октябрьский","до"],
+    q34: ["1000","500","350","2000","6000","1000"],
+    q35: ["10000","15000","800","6000","1000"],
+    q38: ["36","51","2/3","80","100"],
+    q41: ["Люкс","Элитный","бесплатно","по запросу","Rakhmet","Комфортный","2000","заявление"],
+    q42: ["2","месяц","продлен","ещё","2"],
+    q44: ["01.01.2026","01.04.2026","месяц","друг","номер договора"]
+  };
+
+  function normalizeText(s){
+    return String(s).toLowerCase()
+      .replaceAll("ё","е")
+      .replace(/\s+/g," ")
+      .trim();
+  }
+
+  function checkAnswer(){
+    const cur = current(); if(!cur) return;
+    const ua = $("userAnswer").value.trim();
+    if(!ua){
+      toast("Напиши ответ, потом жми «Проверить».");
+      return;
+    }
+
+    const anchors = ANCHORS[cur.id] || [];
+    const n = normalizeText(ua);
+
+    let hits = 0;
+    const misses = [];
+    for(const a of anchors){
+      const na = normalizeText(a);
+      // для “8771” и т.п. — простое includes
+      if(n.includes(na)) hits++;
+      else misses.push(a);
+    }
+
+    // оценка мягкая: >=70% якорей есть — “хорошо”
+    let pct = anchors.length ? Math.round((hits/anchors.length)*100) : 0;
+
+    let html = "";
+    if(!anchors.length){
+      html += `<div class="warnTxt">Авто-проверка: для этого вопроса нет якорей. Сверься с эталоном (Space).</div>`;
+    } else if(pct >= 70){
+      html += `<div class="ok">Похоже, всё ок: ${hits}/${anchors.length} ключевых якорей (${pct}%).</div>`;
+    } else if(pct >= 40){
+      html += `<div class="warnTxt">Частично: ${hits}/${anchors.length} якорей (${pct}%). Возможно, пропущены важные детали.</div>`;
+    } else {
+      html += `<div class="badTxt">Слабовато: ${hits}/${anchors.length} якорей (${pct}%). Лучше свериться с ответом.</div>`;
+    }
+
+    if(anchors.length){
+      html += `<div class="small muted" style="margin-top:8px;">Не найдено: ${misses.slice(0,10).map(m=>`<span class="mono">${escapeHtml(m)}</span>`).join(", ")}${misses.length>10?" …":""}</div>`;
+    }
+    $("checkResult").innerHTML = html;
+
+    // В режиме теста подсказка: если плохо, автоматом показываем подсказку
+    if(state.mode === "quiz" && pct < 70){
+      showHintNow();
+    }
+  }
+
+  // ========= СОБЫТИЯ UI =========
+  $("btnStart").onclick = () => {
+    pool = buildPool();
+    if(pool.length === 0){
+      toast("По фильтрам/поиску нет вопросов.");
+      return;
+    }
+    state.idx = 0;
+    saveState();
+    resetViewFlags();
+    render();
+    toast("Поехали.");
+  };
+
+  $("btnPrev").onclick = () => move(-1);
+  $("btnNext").onclick = () => move(1);
+
+  $("btnShowHint").onclick = showHintNow;
+  $("btnShowAnswer").onclick = showAnswerNow;
+
+  $("btnCheck").onclick = checkAnswer;
+
+  $("btnAgain").onclick = () => review(1);
+  $("btnHard").onclick  = () => review(2);
+  $("btnGood").onclick  = () => review(3);
+
+  $("mode").onchange = (e) => { state.mode = e.target.value; saveState(); render(); };
+  $("order").onchange = (e) => { state.order = e.target.value; saveState(); resetViewFlags(); render(); };
+  $("filterCat").onchange = (e) => { state.filterCat = e.target.value; saveState(); resetViewFlags(); render(); };
+  $("search").oninput = (e) => { state.search = e.target.value; saveState(); resetViewFlags(); render(); };
+
+  $("btnReset").onclick = () => {
+    if(!confirm("Сбросить прогресс?")) return;
+    localStorage.removeItem(STORAGE_KEY);
+    location.reload();
+  };
+
+  $("btnExport").onclick = () => {
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      state
+    };
+    const blob = new Blob([JSON.stringify(payload,null,2)], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "uplink_exam_progress.json";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    toast("Экспортировал прогресс в JSON.");
+  };
+
+  $("btnHotkeys").onclick = () => {
+    toast(
+      "Горячие клавиши:<br>" +
+      "<span class='mono'>H</span> — подсказка • <span class='mono'>Space</span> — показать ответ • " +
+      "<span class='mono'>1</span>/<span class='mono'>2</span>/<span class='mono'>3</span> — оценка (не знаю/частично/знаю)<br>" +
+      "<span class='mono'>N</span>/<span class='mono'>P</span> — след/пред • <span class='mono'>/</span> — фокус на поиск"
+    );
+  };
+
+  // ========= ГОРЯЧИЕ КЛАВИШИ =========
+  document.addEventListener("keydown", (e) => {
+    // если печатаем в textarea/input — не перехватываем, кроме специальных
+    const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : "";
+    const typing = (tag === "input" || tag === "textarea");
+    if(typing){
+      if(e.key === "Escape"){
+        e.target.blur();
+      }
+      return;
+    }
+
+    if(e.key === "/"){
+      e.preventDefault();
+      $("search").focus();
+      return;
+    }
+
+    if(e.key.toLowerCase() === "h"){ showHintNow(); return; }
+    if(e.code === "Space"){ e.preventDefault(); showAnswerNow(); return; }
+    if(e.key.toLowerCase() === "n"){ move(1); return; }
+    if(e.key.toLowerCase() === "p"){ move(-1); return; }
+    if(e.key === "ArrowRight"){ move(1); return; }
+    if(e.key === "ArrowLeft"){ move(-1); return; }
+
+    if(e.key === "1"){ review(1); return; }
+    if(e.key === "2"){ review(2); return; }
+    if(e.key === "3"){ review(3); return; }
+  });
+
+  // ========= INIT =========
+  render();
+
+  // small sanity: show how many in pool
+  toast("Готово. Нажми «Старт». Вопросов: " + QUESTIONS.length + ".");
+})();
+</script>
+</body>
+</html>
