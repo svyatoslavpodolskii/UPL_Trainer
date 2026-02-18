@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Uplink — Тренажёр экзамена (02.02.2026)</title>
+  <title>Uplink — Тренажёр (02.02.2026)</title>
   <style>
     :root{
       --bg:#0f1419; --panel:#121b23; --panel2:#111a22;
@@ -21,45 +21,64 @@
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       background:linear-gradient(180deg, #0f1419, #0b0f14);
       color:var(--text);
+      -webkit-tap-highlight-color: transparent;
     }
 
     header{
-      position:sticky; top:0; z-index:5;
-      background:rgba(15,20,25,.85); backdrop-filter: blur(10px);
+      position:sticky; top:0; z-index:10;
+      background:rgba(15,20,25,.88); backdrop-filter: blur(10px);
       border-bottom:1px solid var(--border);
       padding-top: var(--safe-top);
     }
 
-    .wrap{max-width:900px; margin:0 auto; padding:12px 14px;}
+    .wrap{max-width:920px; margin:0 auto; padding:10px 12px;}
     .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
     .row.nowrap{flex-wrap:nowrap}
-    .title{font-size:16px; font-weight:800; letter-spacing:.2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+    .spacer{flex:1}
+
+    .title{
+      font-size:15px; font-weight:900; letter-spacing:.15px;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+      max-width: 52vw;
+    }
+
     .pill{
-      font-size:12px; padding:6px 10px;
+      font-size:12px; padding:7px 10px;
       border:1px solid var(--border); border-radius:999px;
       color:var(--muted);
       white-space:nowrap;
+      background: rgba(255,255,255,.02);
     }
-    .spacer{flex:1}
+    .pill.warn{color:var(--warn); border-color: rgba(241,196,15,.45);}
+    .pill.ok{color:var(--ok); border-color: rgba(46,204,113,.45);}
+
+    select{
+      background:var(--panel2); color:var(--text); border:1px solid var(--border);
+      padding:10px 12px; border-radius:12px; outline:none;
+      font-size:14px;
+    }
 
     .btn{
       border:1px solid var(--border);
       background:var(--panel2);
       color:var(--text);
-      padding:10px 12px;
+      padding:12px 14px;
       border-radius:12px;
       cursor:pointer;
       transition:.15s;
       user-select:none;
-      -webkit-tap-highlight-color: transparent;
+      font-size:14px;
+      font-weight:650;
     }
     .btn:active{transform: translateY(1px);}
-    .btn.primary{background:rgba(10,134,249,.12); border-color:rgba(10,134,249,.5);}
-    .btn.good{background:rgba(46,204,113,.12); border-color:rgba(46,204,113,.5);}
-    .btn.bad{background:rgba(255,92,92,.12); border-color:rgba(255,92,92,.5);}
+    .btn.primary{background:rgba(10,134,249,.12); border-color:rgba(10,134,249,.55);}
+    .btn.good{background:rgba(46,204,113,.14); border-color:rgba(46,204,113,.55);}
+    .btn.bad{background:rgba(255,92,92,.14); border-color:rgba(255,92,92,.55);}
+    .btn.warn{background:rgba(241,196,15,.10); border-color:rgba(241,196,15,.50);}
+    .btn.ghost{background:transparent;}
     .btn:disabled{opacity:.5; cursor:not-allowed; transform:none;}
 
-    main{max-width:900px; margin:0 auto; padding:14px;}
+    main{max-width:920px; margin:0 auto; padding:12px;}
     .card{
       background:linear-gradient(180deg, rgba(18,27,35,.95), rgba(17,26,34,.95));
       border:1px solid var(--border);
@@ -70,14 +89,15 @@
 
     .meta{display:flex; gap:10px; flex-wrap:wrap; margin:0 0 10px;}
     .tag{
-      font-size:12px; padding:6px 10px;
+      font-size:12px; padding:7px 10px;
       border:1px solid var(--border); border-radius:999px;
       color:var(--muted);
+      background: rgba(255,255,255,.02);
     }
 
     .qText{
       font-size:20px;
-      font-weight:800;
+      font-weight:900;
       margin:6px 0 12px;
       line-height:1.22;
       letter-spacing:.1px;
@@ -92,14 +112,14 @@
     }
     .answerBox b{
       color:var(--muted);
-      font-weight:800;
+      font-weight:900;
       font-size:12px;
       letter-spacing:.25px;
     }
     .answerText{
-      margin-top:8px;
+      margin-top:10px;
       font-size:15px;
-      line-height:1.35;
+      line-height:1.38;
       word-break:break-word;
     }
     .muted{color:var(--muted)}
@@ -107,55 +127,48 @@
 
     .toast{
       position:fixed;
-      right:14px;
-      bottom:calc(14px + var(--safe-bottom) + 76px);
-      z-index:10;
+      left:12px; right:12px;
+      bottom:calc(12px + var(--safe-bottom) + 168px);
+      z-index:20;
       padding:10px 12px;
       border-radius:12px;
       border:1px solid var(--border);
-      background:rgba(18,27,35,.95);
+      background:rgba(18,27,35,.96);
       color:var(--text);
       box-shadow: 0 10px 30px rgba(0,0,0,.35);
-      max-width: 420px;
       display:none;
+      max-width: 920px;
+      margin:0 auto;
     }
 
-    /* Нижняя панель под мобилку */
+    /* Нижняя панель: крупные кнопки под палец */
     .bottomBar{
       position:sticky;
       bottom:0;
-      z-index:6;
-      padding:10px 12px;
-      padding-bottom: calc(10px + var(--safe-bottom));
+      z-index:15;
       background: rgba(15,20,25,.92);
       backdrop-filter: blur(10px);
       border-top:1px solid var(--border);
+      padding:10px 12px;
+      padding-bottom: calc(10px + var(--safe-bottom));
     }
-    .bottomGrid{
-      max-width:900px;
-      margin:0 auto;
-      display:grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap:10px;
-    }
-    .navGrid{
-      max-width:900px;
-      margin:10px auto 0;
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:10px;
-    }
+    .bottomInner{max-width:920px; margin:0 auto;}
+    .grid3{display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;}
+    .grid2{display:grid; grid-template-columns: 1fr 1fr; gap:10px;}
+    .grid2wide{display:grid; grid-template-columns: 1.2fr .8fr; gap:10px;}
+    .mt10{margin-top:10px;}
 
-    /* Мелкие улучшения для узких экранов */
     @media (max-width:520px){
       .wrap{padding:10px 12px;}
       main{padding:12px;}
       .card{padding:12px;}
       .qText{font-size:19px;}
-      .btn{padding:12px 12px;}
-      .title{font-size:15px;}
-      .pill{font-size:11px;}
-      .toast{right:12px; left:12px; max-width:none;}
+      .btn{padding:13px 14px;}
+      .title{max-width: 48vw;}
+      select{width:100%}
+      .row.controls > *{flex:1; min-width: 160px;}
+      .grid2wide{grid-template-columns: 1fr;}
+      .toast{bottom:calc(12px + var(--safe-bottom) + 178px);}
     }
   </style>
 </head>
@@ -167,12 +180,27 @@
       <div class="spacer"></div>
       <button class="btn" id="btnReset">Сброс</button>
     </div>
+
+    <div class="row controls" style="margin-top:10px;">
+      <select id="queue">
+        <option value="order">По порядку (с 1 до конца)</option>
+        <option value="due">Нужно повторить (просрочено)</option>
+        <option value="unlearned">Не выучено (серия &lt; 3)</option>
+        <option value="all">Все вопросы (кроме удалённых)</option>
+      </select>
+
+      <select id="mode">
+        <option value="train">Тренировка (с оценкой)</option>
+        <option value="trial">Пробное тестирование (1/N)</option>
+      </select>
+
+      <button class="btn primary" id="btnToStart" style="display:none;">Сначала</button>
+    </div>
+
     <div class="row" style="margin-top:10px;">
-      <span class="pill" id="pillProgress">#— / —</span>
+      <span class="pill" id="pillProgress">—</span>
       <span class="pill" id="pillCat">Категория: —</span>
       <span class="pill" id="pillState">—</span>
-      <div class="spacer"></div>
-      <button class="btn primary" id="btnStart">Старт</button>
     </div>
   </div>
 </header>
@@ -185,28 +213,36 @@
       <div class="tag" id="qStreak">серия: —</div>
     </div>
 
-    <div class="qText" id="question">Нажми “Старт”</div>
+    <div class="qText" id="question">Выбери режим и начинай</div>
 
     <div class="answerBox">
       <div class="row" style="justify-content:space-between; align-items:center;">
         <b>ОТВЕТ</b>
-        <button class="btn primary" id="btnToggleAnswer">Показать ответ</button>
+        <button class="btn primary" id="btnToggleAnswer">Показать</button>
       </div>
       <div class="answerText" id="answer" style="display:none;"></div>
-      <div class="answerText muted" id="answerHiddenHint" style="display:block;">Скрыто. Нажми “Показать ответ”.</div>
+      <div class="answerText muted" id="answerHiddenHint" style="display:block;">Скрыто. Нажми “Показать”.</div>
     </div>
   </section>
 </main>
 
 <div class="bottomBar">
-  <div class="bottomGrid">
-    <button class="btn bad" id="btnAgain">Не знаю</button>
-    <button class="btn" id="btnHard">Частично</button>
-    <button class="btn good" id="btnGood">Знаю</button>
-  </div>
-  <div class="navGrid">
-    <button class="btn" id="btnPrev">← Предыдущий</button>
-    <button class="btn" id="btnNext">Следующий →</button>
+  <div class="bottomInner">
+    <div class="grid2wide">
+      <button class="btn warn" id="btnRemove">Убрать вопрос</button>
+      <button class="btn primary" id="btnToggleAnswer2">Показать ответ</button>
+    </div>
+
+    <div class="grid2 mt10">
+      <button class="btn" id="btnPrev">← Предыдущий</button>
+      <button class="btn" id="btnNext">Следующий →</button>
+    </div>
+
+    <div class="grid3 mt10" id="gradeRow">
+      <button class="btn bad" id="btnAgain">Не знаю</button>
+      <button class="btn" id="btnHard">Частично</button>
+      <button class="btn good" id="btnGood">Знаю</button>
+    </div>
   </div>
 </div>
 
@@ -214,9 +250,9 @@
 
 <script>
 (() => {
-  // ========= ДАННЫЕ: ВОПРОСЫ/ОТВЕТЫ (02.02.2026) =========
+  // ========= ВОПРОСЫ/ОТВЕТЫ (02.02.2026) =========
+  // 1) УБРАЛИ первый вопрос "Речь/старт" полностью.
   const QUESTIONS = [
-    { id:"q00", cat:"Речь/старт", q:"0.0 Что сказать в начале разговора (вежливый старт)?", a:"Здравствуйте! Как вы? Всё хорошо? Компания «Кабельные Сети Костаная» / ТОО «Uplink»." },
     { id:"q01", cat:"Контакты", q:"1) Номера телефонов по городам и корпоративные клиенты", a:"Костанай: 22-08-60. Лисаковск: 2-00-60. Качар: 3-90-90. Корпоративные клиенты: 90-23-23." },
     { id:"q02", cat:"Контакты", q:"2) WhatsApp, Telegram, Instagram, VK (точные названия)", a:"WhatsApp техподдержка: +7 771 058 15 55. Telegram бот: uplinkkz_bot. Instagram: @uplink.kzt. VK: up_link_kz." },
     { id:"q03", cat:"Контакты/оплата", q:"3) Что такое 220860 и когда используется?", a:"220860 — лицевой/договор для зачисления оплаты по акту, если у абонента нет лицевого счёта по Интернет или «Умный дом» (часто при продаже ключей)." },
@@ -281,34 +317,36 @@
   ];
 
   // ========= ПРОГРЕСС =========
-  const STORAGE_KEY = "uplink_exam_trainer_mobile_v1";
+  const STORAGE_KEY = "uplink_exam_trainer_mobile_v2";
   const now = () => Date.now();
 
   function loadState(){
     const raw = localStorage.getItem(STORAGE_KEY);
     if(!raw){
-      const init = {};
+      const stats = {};
       for(const it of QUESTIONS){
-        init[it.id] = {
-          seen: 0,
-          streak: 0,
-          ease: 2.0,
-          interval: 0,
-          due: 0,
-          lastScore: 0
-        };
+        stats[it.id] = { seen:0, streak:0, ease:2.0, interval:0, due:0, lastScore:0 };
       }
-      return { idx: 0, stats: init };
+      return {
+        idx: 0,
+        queue: "order",
+        mode: "train",
+        stats,
+        hidden: {} // 2) удалённые вопросы (до сброса)
+      };
     }
     try{
       const parsed = JSON.parse(raw);
       if(!parsed.stats) parsed.stats = {};
+      if(!parsed.hidden) parsed.hidden = {};
       for(const it of QUESTIONS){
         if(!parsed.stats[it.id]){
           parsed.stats[it.id] = { seen:0, streak:0, ease:2.0, interval:0, due:0, lastScore:0 };
         }
       }
       if(typeof parsed.idx !== "number") parsed.idx = 0;
+      if(!parsed.queue) parsed.queue = "order";
+      if(!parsed.mode) parsed.mode = "train";
       return parsed;
     }catch(e){
       localStorage.removeItem(STORAGE_KEY);
@@ -326,10 +364,7 @@
     toast._t = setTimeout(()=> el.style.display="none", 2200);
   }
 
-  // Простая система повторения:
-  // 1 => 5 мин
-  // 2 => *1.5 (мин 30 мин)
-  // 3 => *ease (мин 8 часов), streak++
+  // Простая система повторения
   function applyReview(qid, score){
     const s = state.stats[qid];
     s.seen += 1;
@@ -363,20 +398,6 @@
   let showAnswer = false;
   let pool = [];
 
-  function buildPool(){
-    // Всегда "сначала просроченное/сложное": сортируем по due (старые/0 идут вверх)
-    const arr = QUESTIONS.slice();
-    arr.sort((a,b)=> (state.stats[a.id].due||0) - (state.stats[b.id].due||0));
-    return arr;
-  }
-
-  function current(){
-    pool = buildPool();
-    if(pool.length === 0) return null;
-    if(state.idx >= pool.length) state.idx = 0;
-    return pool[state.idx];
-  }
-
   function escapeHtml(s){
     return String(s)
       .replaceAll("&","&amp;")
@@ -391,11 +412,38 @@
     return "<div>" + lines.map(l=>`<div style="margin:6px 0;">• ${escapeHtml(l)}</div>`).join("") + "</div>";
   }
 
-  function fmtDue(qid){
-    const s = state.stats[qid];
-    if((s.due||0) <= now()) return "повторить";
-    const d = new Date(s.due);
-    return "ждёт: " + d.toLocaleString("ru-RU");
+  function isHidden(qid){ return !!state.hidden[qid]; }
+  function isMastered(qid){ return (state.stats[qid].streak || 0) >= 3; }
+  function isDue(qid){ return (state.stats[qid].due || 0) <= now(); }
+
+  function buildPool(){
+    // 3) Вернули выбор порядка/очереди
+    const visible = QUESTIONS.filter(q => !isHidden(q.id));
+
+    // 4) Пробное тестирование: строго по порядку от первого до последнего
+    if(state.mode === "trial"){
+      return visible.slice(); // уже в исходном порядке
+    }
+
+    // Тренировка: очередь по выбору
+    if(state.queue === "order"){
+      return visible.slice(); // по номеру
+    }
+    if(state.queue === "due"){
+      // только просроченные, но порядок — по номеру (не сортируем)
+      return visible.filter(q => isDue(q.id));
+    }
+    if(state.queue === "unlearned"){
+      return visible.filter(q => !isMastered(q.id));
+    }
+    return visible.slice(); // all
+  }
+
+  function current(){
+    pool = buildPool();
+    if(pool.length === 0) return null;
+    if(state.idx >= pool.length) state.idx = 0;
+    return pool[state.idx];
   }
 
   function resetView(){
@@ -403,32 +451,76 @@
     $("answer").style.display = "none";
     $("answer").innerHTML = "";
     $("answerHiddenHint").style.display = "block";
-    $("btnToggleAnswer").textContent = "Показать ответ";
+    $("btnToggleAnswer").textContent = "Показать";
+    $("btnToggleAnswer2").textContent = "Показать ответ";
   }
 
-  function render(){
-    const cur = current();
+  function setPillState(cur){
+    const pill = $("pillState");
+    pill.classList.remove("warn","ok");
+
     if(!cur){
-      $("question").textContent = "Нет вопросов.";
+      pill.textContent = "—";
       return;
     }
 
-    const num = pool.findIndex(x=>x.id===cur.id) + 1;
+    // 6) "повторить" — оранжевым до выучивания, зелёным после
+    const mastered = isMastered(cur.id);
+    if(mastered){
+      pill.textContent = "выучено";
+      pill.classList.add("ok");
+      return;
+    }
+    // не выучено
+    if(isDue(cur.id)){
+      pill.textContent = "повторить";
+      pill.classList.add("warn");
+    }else{
+      // отложено (но всё равно не выучено) — тоже оранжевое, чтобы не выглядело как обычная серая плашка
+      const d = new Date(state.stats[cur.id].due || 0);
+      pill.textContent = "повторить позже: " + d.toLocaleString("ru-RU");
+      pill.classList.add("warn");
+    }
+  }
+
+  function render(){
+    // 5) Кнопка "Сначала" только в режиме "По порядку" (и только в тренировке)
+    const showToStart = (state.mode === "train" && state.queue === "order");
+    $("btnToStart").style.display = showToStart ? "inline-flex" : "none";
+
+    // В пробном тестировании — это именно тест, поэтому оценки оставляем, но показываем прогресс 1/N
+    const cur = current();
+    if(!cur){
+      $("question").textContent = "В этой очереди нет вопросов (или всё убрано).";
+      $("pillProgress").textContent = "—";
+      $("pillCat").textContent = "Категория: —";
+      setPillState(null);
+      $("qNum").textContent = "#—";
+      $("qSeen").textContent = "просмотров: —";
+      $("qStreak").textContent = "серия: —";
+      resetView();
+      return;
+    }
+
+    const pos = state.idx + 1;
     const total = pool.length;
 
-    const st = state.stats[cur.id];
+    // 4) формат 1/48
+    $("pillProgress").textContent = pos + "/" + total;
+    $("pillCat").textContent = "Категория: " + cur.cat;
 
-    $("qNum").textContent = "#" + String(QUESTIONS.findIndex(x=>x.id===cur.id)+1).padStart(2,"0");
+    setPillState(cur);
+
+    // номер вопроса = исходный номер в базе (по QUESTIONS)
+    const baseNum = QUESTIONS.findIndex(x=>x.id===cur.id) + 1;
+    $("qNum").textContent = "#" + String(baseNum).padStart(2,"0");
+
+    const st = state.stats[cur.id];
     $("qSeen").textContent = "просмотров: " + (st.seen || 0);
     $("qStreak").textContent = "серия: " + (st.streak || 0);
 
     $("question").textContent = cur.q;
 
-    $("pillProgress").textContent = "#" + num + " / " + total;
-    $("pillCat").textContent = "Категория: " + cur.cat;
-    $("pillState").textContent = fmtDue(cur.id);
-
-    // если ответ уже открыт, обновляем контент
     if(showAnswer){
       $("answer").innerHTML = formatAnswer(cur.a);
     }
@@ -450,7 +542,8 @@
       $("answer").innerHTML = formatAnswer(cur.a);
       $("answer").style.display = "block";
       $("answerHiddenHint").style.display = "none";
-      $("btnToggleAnswer").textContent = "Скрыть ответ";
+      $("btnToggleAnswer").textContent = "Скрыть";
+      $("btnToggleAnswer2").textContent = "Скрыть ответ";
     }else{
       resetView();
     }
@@ -458,29 +551,76 @@
 
   function review(score){
     const cur = current(); if(!cur) return;
+
     applyReview(cur.id, score);
     saveState();
+
     toast(score===3 ? "Записал: ЗНАЮ ✅" : score===2 ? "Записал: ЧАСТИЧНО ⚠️" : "Записал: НЕ ЗНАЮ ❌");
+
     resetView();
-    // после оценки — следующая
+
+    // В тесте — просто идём дальше по порядку
+    // В тренировке — тоже дальше по очереди (как сейчас собрана)
     move(1);
   }
 
-  // ========= EVENTS =========
-  $("btnStart").onclick = () => {
+  function removeCurrent(){
+    const cur = current(); if(!cur) return;
+    if(!confirm("Убрать этот вопрос до сброса?")) return;
+    state.hidden[cur.id] = true;
+    saveState();
+    toast("Убрал вопрос из очереди.");
+    // если стало пусто — просто перерисуем
     pool = buildPool();
     if(pool.length === 0){
-      toast("Вопросов нет.");
+      state.idx = 0;
+      saveState();
+      resetView();
+      render();
       return;
     }
+    // остаёмся на том же индексе, но там уже будет следующий
+    if(state.idx >= pool.length) state.idx = 0;
+    saveState();
+    resetView();
+    render();
+  }
+
+  // ========= EVENTS =========
+  $("queue").value = state.queue;
+  $("mode").value = state.mode;
+
+  $("queue").onchange = (e) => {
+    state.queue = e.target.value;
     state.idx = 0;
     saveState();
     resetView();
     render();
-    toast("Поехали.");
+  };
+
+  $("mode").onchange = (e) => {
+    state.mode = e.target.value;
+
+    // при входе в "Пробное" — всегда в начало
+    state.idx = 0;
+
+    saveState();
+    resetView();
+    render();
+    toast(state.mode === "trial" ? "Пробное тестирование: по порядку." : "Тренировка: выбери очередь.");
+  };
+
+  $("btnToStart").onclick = () => {
+    state.idx = 0;
+    saveState();
+    resetView();
+    render();
+    toast("Сначала.");
   };
 
   $("btnToggleAnswer").onclick = toggleAnswer;
+  $("btnToggleAnswer2").onclick = toggleAnswer;
+
   $("btnPrev").onclick = () => move(-1);
   $("btnNext").onclick = () => move(1);
 
@@ -488,15 +628,17 @@
   $("btnHard").onclick  = () => review(2);
   $("btnGood").onclick  = () => review(3);
 
+  $("btnRemove").onclick = removeCurrent;
+
   $("btnReset").onclick = () => {
-    if(!confirm("Сбросить прогресс?")) return;
+    if(!confirm("Сбросить прогресс и вернуть все убранные вопросы?")) return;
     localStorage.removeItem(STORAGE_KEY);
     location.reload();
   };
 
   // ========= INIT =========
   render();
-  toast("Готово. Нажми «Старт». Вопросов: " + QUESTIONS.length + ".");
+  toast("Готово. Выбери очередь/режим и работай. Вопросов: " + QUESTIONS.length + ".");
 })();
 </script>
 </body>
