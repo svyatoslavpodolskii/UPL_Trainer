@@ -1,646 +1,400 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Uplink — Тренажёр (02.02.2026)</title>
-  <style>
-    :root{
-      --bg:#0f1419; --panel:#121b23; --panel2:#111a22;
-      --text:#e9edef; --muted:#9aa1a7; --border:#2a3641;
-      --accent:#0a86f9; --ok:#2ecc71; --bad:#ff5c5c; --warn:#f1c40f;
-      --radius:14px;
-
-      --safe-top: env(safe-area-inset-top, 0px);
-      --safe-bottom: env(safe-area-inset-bottom, 0px);
-    }
-    *{box-sizing:border-box}
-    html, body{height:100%}
-    body{
-      margin:0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background:linear-gradient(180deg, #0f1419, #0b0f14);
-      color:var(--text);
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    header{
-      position:sticky; top:0; z-index:10;
-      background:rgba(15,20,25,.88); backdrop-filter: blur(10px);
-      border-bottom:1px solid var(--border);
-      padding-top: var(--safe-top);
-    }
-
-    .wrap{max-width:920px; margin:0 auto; padding:10px 12px;}
-    .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
-    .row.nowrap{flex-wrap:nowrap}
-    .spacer{flex:1}
-
-    .title{
-      font-size:15px; font-weight:900; letter-spacing:.15px;
-      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-      max-width: 52vw;
-    }
-
-    .pill{
-      font-size:12px; padding:7px 10px;
-      border:1px solid var(--border); border-radius:999px;
-      color:var(--muted);
-      white-space:nowrap;
-      background: rgba(255,255,255,.02);
-    }
-    .pill.warn{color:var(--warn); border-color: rgba(241,196,15,.45);}
-    .pill.ok{color:var(--ok); border-color: rgba(46,204,113,.45);}
-
-    select{
-      background:var(--panel2); color:var(--text); border:1px solid var(--border);
-      padding:10px 12px; border-radius:12px; outline:none;
-      font-size:14px;
-    }
-
-    .btn{
-      border:1px solid var(--border);
-      background:var(--panel2);
-      color:var(--text);
-      padding:12px 14px;
-      border-radius:12px;
-      cursor:pointer;
-      transition:.15s;
-      user-select:none;
-      font-size:14px;
-      font-weight:650;
-    }
-    .btn:active{transform: translateY(1px);}
-    .btn.primary{background:rgba(10,134,249,.12); border-color:rgba(10,134,249,.55);}
-    .btn.good{background:rgba(46,204,113,.14); border-color:rgba(46,204,113,.55);}
-    .btn.bad{background:rgba(255,92,92,.14); border-color:rgba(255,92,92,.55);}
-    .btn.warn{background:rgba(241,196,15,.10); border-color:rgba(241,196,15,.50);}
-    .btn.ghost{background:transparent;}
-    .btn:disabled{opacity:.5; cursor:not-allowed; transform:none;}
-
-    main{max-width:920px; margin:0 auto; padding:12px;}
-    .card{
-      background:linear-gradient(180deg, rgba(18,27,35,.95), rgba(17,26,34,.95));
-      border:1px solid var(--border);
-      border-radius: var(--radius);
-      padding:14px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.25);
-    }
-
-    .meta{display:flex; gap:10px; flex-wrap:wrap; margin:0 0 10px;}
-    .tag{
-      font-size:12px; padding:7px 10px;
-      border:1px solid var(--border); border-radius:999px;
-      color:var(--muted);
-      background: rgba(255,255,255,.02);
-    }
-
-    .qText{
-      font-size:20px;
-      font-weight:900;
-      margin:6px 0 12px;
-      line-height:1.22;
-      letter-spacing:.1px;
-      word-break:break-word;
-    }
-
-    .answerBox{
-      border:1px dashed rgba(154,161,167,.35);
-      border-radius: 12px;
-      padding:12px;
-      background: rgba(255,255,255,.02);
-    }
-    .answerBox b{
-      color:var(--muted);
-      font-weight:900;
-      font-size:12px;
-      letter-spacing:.25px;
-    }
-    .answerText{
-      margin-top:10px;
-      font-size:15px;
-      line-height:1.38;
-      word-break:break-word;
-    }
-    .muted{color:var(--muted)}
-    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
-
-    .toast{
-      position:fixed;
-      left:12px; right:12px;
-      bottom:calc(12px + var(--safe-bottom) + 168px);
-      z-index:20;
-      padding:10px 12px;
-      border-radius:12px;
-      border:1px solid var(--border);
-      background:rgba(18,27,35,.96);
-      color:var(--text);
-      box-shadow: 0 10px 30px rgba(0,0,0,.35);
-      display:none;
-      max-width: 920px;
-      margin:0 auto;
-    }
-
-    /* Нижняя панель: крупные кнопки под палец */
-    .bottomBar{
-      position:sticky;
-      bottom:0;
-      z-index:15;
-      background: rgba(15,20,25,.92);
-      backdrop-filter: blur(10px);
-      border-top:1px solid var(--border);
-      padding:10px 12px;
-      padding-bottom: calc(10px + var(--safe-bottom));
-    }
-    .bottomInner{max-width:920px; margin:0 auto;}
-    .grid3{display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;}
-    .grid2{display:grid; grid-template-columns: 1fr 1fr; gap:10px;}
-    .grid2wide{display:grid; grid-template-columns: 1.2fr .8fr; gap:10px;}
-    .mt10{margin-top:10px;}
-
-    @media (max-width:520px){
-      .wrap{padding:10px 12px;}
-      main{padding:12px;}
-      .card{padding:12px;}
-      .qText{font-size:19px;}
-      .btn{padding:13px 14px;}
-      .title{max-width: 48vw;}
-      select{width:100%}
-      .row.controls > *{flex:1; min-width: 160px;}
-      .grid2wide{grid-template-columns: 1fr;}
-      .toast{bottom:calc(12px + var(--safe-bottom) + 178px);}
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Трейнер — Проверка знаний</title>
+<style>
+:root{
+  --bg:#f5f5f7;--panel:#fff;--panel2:#f0f1f3;--text:#1d1d1f;--muted:#6e6e73;
+  --line:#d2d2d7;--accent:#2f7d5a;--accent2:#246447;--good:#198754;--bad:#c63c3c;
+  --shadow:0 8px 30px rgba(0,0,0,.07);--r:22px;--rs:14px
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+button{font:inherit}
+.shell{max-width:980px;margin:auto;padding:24px}
+.top{display:flex;align-items:center;gap:12px;margin-bottom:26px}
+.logo{width:36px;height:36px;border-radius:11px;background:linear-gradient(145deg,#2f7d5a,#69b98e);box-shadow:0 8px 24px rgba(47,125,90,.25)}
+.brand{font-weight:700;font-size:19px}.spacer{flex:1}.small{color:var(--muted);font-size:13px}
+.card{background:var(--panel);border:1px solid rgba(0,0,0,.06);border-radius:var(--r);box-shadow:var(--shadow);padding:26px}
+.hero{text-align:center;padding:36px 26px}
+.hero h1{font-size:38px;line-height:1.05;letter-spacing:-1.2px;margin:0 0 12px}
+.hero p{color:var(--muted);max-width:650px;margin:0 auto 26px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:18px 0 26px}
+.stat{background:var(--panel2);border-radius:16px;padding:16px;text-align:left}
+.stat b{display:block;font-size:24px;letter-spacing:-.5px}.stat span{color:var(--muted);font-size:12px}
+.progress{height:10px;background:#e6e6e9;border-radius:999px;overflow:hidden;margin:12px 0 8px}
+.progress>div{height:100%;background:linear-gradient(90deg,#2f7d5a,#69b98e);width:0;transition:.25s}
+.actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.btn{border:0;border-radius:999px;padding:12px 19px;background:#e9e9ec;color:var(--text);cursor:pointer;font-weight:600}
+.btn:hover{filter:brightness(.98)}.btn.primary{background:var(--accent);color:#fff}.btn.primary:hover{background:var(--accent2)}
+.btn.ghost{background:transparent;border:1px solid var(--line)}.btn.danger{color:var(--bad)}
+.hidden{display:none!important}
+.notice{margin-top:16px;border-radius:14px;padding:12px 14px;background:#fff4d8;color:#76520e;font-size:13px;text-align:left}
+.bank{margin-top:18px;text-align:left}.bankrow{display:flex;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid #eee}
+.bankrow:last-child{border:0}.bankrow .name{flex:1}.ok{color:var(--good)}.err{color:var(--bad)}
+.quizhead{display:flex;align-items:center;gap:14px;margin-bottom:18px}.counter{font-weight:700}.quizbar{flex:1;height:7px;background:#e7e7ea;border-radius:999px;overflow:hidden}.quizbar div{height:100%;background:var(--accent);transition:.2s}
+.qmeta{font-size:12px;color:var(--muted);margin-bottom:12px}.question{font-size:27px;line-height:1.18;letter-spacing:-.45px;font-weight:700;margin:0 0 24px}
+.options{display:grid;gap:10px}.option{width:100%;text-align:left;border:1px solid var(--line);background:#fff;border-radius:16px;padding:16px 18px;cursor:pointer;display:flex;gap:12px;align-items:flex-start}
+.option:hover{background:#f8f8fa}.option.selected{border-color:var(--accent);box-shadow:0 0 0 3px rgba(47,125,90,.12)}
+.letter{width:28px;height:28px;flex:0 0 28px;border-radius:50%;background:#ededf0;display:grid;place-items:center;font-weight:700;font-size:13px}
+.option.selected .letter{background:var(--accent);color:#fff}
+.nav{display:flex;justify-content:space-between;gap:10px;margin-top:24px}
+.result h1{font-size:44px;margin:0 0 8px;letter-spacing:-1.5px}.result .sub{color:var(--muted)}
+.review{margin-top:24px;display:grid;gap:12px}.reviewitem{border:1px solid var(--line);border-radius:16px;padding:16px}
+.reviewitem.bad{border-color:#e6bcbc;background:#fff8f8}.reviewitem.good{border-color:#bde3cc;background:#f7fcf9}
+.reviewitem h3{margin:0 0 8px;font-size:16px}.reviewitem p{margin:5px 0;color:#444}.source{font-size:12px;color:var(--muted);margin-top:8px}
+.topiclist{margin-top:18px;display:grid;gap:8px}.topic{display:flex;align-items:center;gap:10px}.topic span:first-child{flex:1}
+@media(max-width:720px){.shell{padding:14px}.card{padding:19px}.hero h1{font-size:31px}.stats{grid-template-columns:1fr 1fr}.question{font-size:23px}}
+</style>
 </head>
 <body>
-<header>
-  <div class="wrap">
-    <div class="row nowrap">
-      <div class="title">Uplink — тренажёр</div>
-      <div class="spacer"></div>
-      <button class="btn" id="btnReset">Сброс</button>
+<div class="shell">
+  <div class="top"><div class="logo"></div><div class="brand">Трейнер</div><div class="spacer"></div><div class="small" id="bankTop">Загрузка вопросов…</div></div>
+
+  <section id="home" class="card hero">
+    <h1>Проверка знаний</h1>
+    <p>Один общий банк вопросов. Каждый новый запуск продолжает с тех вопросов, которые вы ещё не проходили.</p>
+    <div class="stats">
+      <div class="stat"><b id="sDone">0</b><span>пройдено уникальных</span></div>
+      <div class="stat"><b id="sTotal">0</b><span>всего вопросов</span></div>
+      <div class="stat"><b id="sErrors">0</b><span>с ошибками</span></div>
+      <div class="stat"><b id="sPct">0%</b><span>покрытие банка</span></div>
     </div>
-
-    <div class="row controls" style="margin-top:10px;">
-      <select id="queue">
-        <option value="order">По порядку (с 1 до конца)</option>
-        <option value="due">Нужно повторить (просрочено)</option>
-        <option value="unlearned">Не выучено (серия &lt; 3)</option>
-        <option value="all">Все вопросы (кроме удалённых)</option>
-      </select>
-
-      <select id="mode">
-        <option value="train">Тренировка (с оценкой)</option>
-        <option value="trial">Пробное тестирование (1/N)</option>
-      </select>
-
-      <button class="btn primary" id="btnToStart" style="display:none;">Сначала</button>
+    <div class="progress"><div id="mainProgress"></div></div>
+    <div class="small" id="progressText">0 из 0</div>
+    <div style="height:22px"></div>
+    <div class="actions">
+      <button class="btn primary" id="start30">Продолжить · 30 вопросов</button>
+      <button class="btn" id="start10">10 вопросов</button>
+      <button class="btn" id="start50">50 вопросов</button>
+      <button class="btn ghost" id="repeatErrors">Повторить ошибки</button>
     </div>
+    <div id="loadWarnings"></div>
+    <div class="bank" id="bankInfo"></div>
+  </section>
 
-    <div class="row" style="margin-top:10px;">
-      <span class="pill" id="pillProgress">—</span>
-      <span class="pill" id="pillCat">Категория: —</span>
-      <span class="pill" id="pillState">—</span>
+  <section id="quiz" class="card hidden">
+    <div class="quizhead">
+      <div class="counter" id="counter">1 / 30</div>
+      <div class="quizbar"><div id="quizProgress"></div></div>
+      <button class="btn ghost" id="exitQuiz">Выйти</button>
     </div>
-  </div>
-</header>
-
-<main>
-  <section class="card" id="mainCard">
-    <div class="meta">
-      <div class="tag" id="qNum">#—</div>
-      <div class="tag" id="qSeen">просмотров: —</div>
-      <div class="tag" id="qStreak">серия: —</div>
-    </div>
-
-    <div class="qText" id="question">Выбери режим и начинай</div>
-
-    <div class="answerBox">
-      <div class="row" style="justify-content:space-between; align-items:center;">
-        <b>ОТВЕТ</b>
-        <button class="btn primary" id="btnToggleAnswer">Показать</button>
-      </div>
-      <div class="answerText" id="answer" style="display:none;"></div>
-      <div class="answerText muted" id="answerHiddenHint" style="display:block;">Скрыто. Нажми “Показать”.</div>
+    <div class="qmeta" id="qmeta"></div>
+    <h2 class="question" id="question"></h2>
+    <div class="options" id="options"></div>
+    <div class="nav">
+      <button class="btn" id="prev">Назад</button>
+      <button class="btn primary" id="next">Далее</button>
     </div>
   </section>
-</main>
 
-<div class="bottomBar">
-  <div class="bottomInner">
-    <div class="grid2wide">
-      <button class="btn warn" id="btnRemove">Убрать вопрос</button>
-      <button class="btn primary" id="btnToggleAnswer2">Показать ответ</button>
+  <section id="result" class="card result hidden">
+    <h1 id="resultScore">0 / 0</h1>
+    <div class="sub" id="resultSub"></div>
+    <div class="topiclist" id="topicResults"></div>
+    <div class="actions" style="justify-content:flex-start;margin-top:22px">
+      <button class="btn primary" id="continueBtn">Продолжить новые вопросы</button>
+      <button class="btn" id="homeBtn">На главную</button>
     </div>
-
-    <div class="grid2 mt10">
-      <button class="btn" id="btnPrev">← Предыдущий</button>
-      <button class="btn" id="btnNext">Следующий →</button>
-    </div>
-
-    <div class="grid3 mt10" id="gradeRow">
-      <button class="btn bad" id="btnAgain">Не знаю</button>
-      <button class="btn" id="btnHard">Частично</button>
-      <button class="btn good" id="btnGood">Знаю</button>
-    </div>
-  </div>
+    <div class="review" id="review"></div>
+  </section>
 </div>
 
-<div class="toast" id="toast"></div>
-
 <script>
-(() => {
-  // ========= ВОПРОСЫ/ОТВЕТЫ (02.02.2026) =========
-  // 1) УБРАЛИ первый вопрос "Речь/старт" полностью.
-  const QUESTIONS = [
-    { id:"q01", cat:"Контакты", q:"1) Номера телефонов по городам и корпоративные клиенты", a:"Костанай: 22-08-60. Лисаковск: 2-00-60. Качар: 3-90-90. Корпоративные клиенты: 90-23-23." },
-    { id:"q02", cat:"Контакты", q:"2) WhatsApp, Telegram, Instagram, VK (точные названия)", a:"WhatsApp техподдержка: +7 771 058 15 55. Telegram бот: uplinkkz_bot. Instagram: @uplink.kzt. VK: up_link_kz." },
-    { id:"q03", cat:"Контакты/оплата", q:"3) Что такое 220860 и когда используется?", a:"220860 — лицевой/договор для зачисления оплаты по акту, если у абонента нет лицевого счёта по Интернет или «Умный дом» (часто при продаже ключей)." },
+const MAX_FILES = 40;
+const QUESTIONS_DIR = './questions/';
+const STORAGE_KEY = 'opora_quiz_progress_v3';
 
-    { id:"q04", cat:"География", q:"4) Где представлена компания (все населённые пункты)?", a:"Костанай, Кунай, Амангельды, Дружба, Мичуринское, Тобыл, Лисаковск, Октябрьский, Качар." },
-    { id:"q05", cat:"Услуги по пунктам", q:"5) Где есть Кабельное ТВ, а где его нет?", a:"Кабельное ТВ есть только в Костанае и Кунае. В остальных пунктах кабельного ТВ нет." },
-    { id:"q06", cat:"Услуги по пунктам", q:"6) Где есть IPTV Portal, а где его нет?", a:"IPTV Portal есть: Костанай, Кунай, Амангельды, Дружба, Мичуринское, Тобыл, Октябрьский. IPTV Portal нет: Лисаковск, Качар." },
-    { id:"q07", cat:"Услуги по пунктам", q:"7) Где есть «Умный дом», а где его нет?", a:"«Умный дом» есть: Костанай, Кунай, Качар. Нет: Амангельды, Дружба, Мичуринское, Тобыл, Лисаковск, Октябрьский." },
+let bank = [];
+let loadState = { loaded: [], missing: [], errors: [] };
+let progress = loadProgress();
+let session = null;
 
-    { id:"q08", cat:"Кассы/офисы", q:"8) Адреса офисов/пунктов оплаты (все точки)", a:"Костанай: Чкалова 16; Маяковского 120; Толстого 53; Каирбекова 383/2. Лисаковск: 3 мкрн, дом 12. Качар: ТЦ «Домовой», 3 этаж, бутик №7." },
-    { id:"q09", cat:"Кассы", q:"9) Кассы: ориентиры (где есть ориентир — даём ориентир)", a:"Костанай: «9 мкрн, 10-этажный дом, напротив горводоканала»; «магазин Бахыт»; «аптека Цветная, AidanaPlaza»; «аптека Цветная». Лисаковск: «3 мкрн, дом 12, вход со стороны парка, справа от проходного подъезда». Качар: «ТЦ Домовой, 3 этаж, бутик №7»." },
+function loadProgress(){
+  try{
+    const x = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    return x && typeof x === 'object' ? x : {};
+  }catch(e){ return {}; }
+}
+function saveProgress(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(progress)); }
 
-    { id:"q10", cat:"Интернет/тарифы", q:"10) Тарифы интернета с 01.02.2026: скорость и цена (3 тарифа)", a:"Комфортный: до 100 Мбит/с — 5000 тг/мес. Rakhmet: до 300 Мбит/с — 6500 тг/мес (IPTV Portal бонусом). Элитный: до 500 Мбит/с — 8500 тг/мес." },
-    { id:"q11", cat:"Интернет/тарифы", q:"11) Что происходит с тарифом «Люкс» после 01.02.2026?", a:"Все абоненты, которые до 01.02.2026 пользовались ТП «Люкс», переходят на ТП «Элитный»." },
-    { id:"q12", cat:"Интернет/Качар", q:"12) Тарифы интернета в Качаре (после 01.02.2026)", a:"Качар (МКД Ethernet): Комфортный (до 100) — 5000; Элитный (до 500) — 8500. Тарифа Rakhmet в Качаре нет." },
-
-    { id:"q13", cat:"Интернет/подключение", q:"13) Стоимость подключения интернета (до роутера / от роутера)", a:"До роутера: бесплатно. От роутера: согласно акту (пример: 8-жильный кабель 150 тг/м)." },
-    { id:"q14", cat:"Интернет/кабель", q:"14) Где 4-жильный кабель бесплатный?", a:"Бесплатный 4-жильный кабель: Лисаковск МКД Ethernet и Качар МКД Ethernet." },
-    { id:"q15", cat:"Интернет/частный сектор", q:"15) Частный сектор — подключение бесплатное или нет (по этой редакции)?", a:"По редакции 02.02.2026: до роутера бесплатно, в том числе в частном секторе." },
-
-    { id:"q16", cat:"Технологии", q:"16) Где какая технология: Ethernet/GPON (по территориям)?", a:"Костанай МКД: Ethernet или GPON. Костанай частный сектор (Амангельды, Дружба, Мичуринское, Тобыл): GPON. Лисаковск МКД: Ethernet. Лисаковск коттеджи: GPON. Октябрьский: GPON. Качар МКД: Ethernet." },
-    { id:"q17", cat:"Терминалы", q:"17) Где ставим терминалы (HGU/SFU/ONU) и где НЕ ставим?", a:"Терминалы (HGU/SFU/ONU) ставим только на GPON. На Ethernet терминалы не ставим — там только роутер." },
-
-    { id:"q18", cat:"Оборудование", q:"18) Роутер 1 Гбит: цена продажи и аренды, кому аренда доступна", a:"2-диапазонный роутер 1 Гбит: продажа 18 000 тг; аренда 500 тг/мес (квартировладелец/арендатор)." },
-    { id:"q19", cat:"Оборудование", q:"19) Роутер 100 Мбит: цена продажи и аренды; где используется", a:"2-диапазонный роутер 100 Мбит: продажа 14 000 тг; аренда 500 тг/мес. Используется в Лисаковске МКД Ethernet и Качаре МКД Ethernet." },
-    { id:"q20", cat:"Оборудование/GPON", q:"20) HGU (терминал): цена продажи и аренды; где ставим (включая исключения)", a:"HGU терминал 1 Гбит: продажа 20 000 тг; аренда 500 тг/мес. Ставим: Костанай МКД GPON; в Мичуринском — только мкрн «Байтерек», многоэтажные дома." },
-    { id:"q21", cat:"Оборудование/GPON", q:"21) SFU/ONU («онушка»): цена и условие предоставления; где встречается", a:"SFU/ONU: продажа 12 000 тг; условие — ответственное хранение (собственник). Встречается: Костанай GPON (в т.ч. Абая 111; у некоторых Каирбекова 387/1), Костанай частный сектор GPON, Лисаковск коттеджи GPON, Октябрьский GPON." },
-    { id:"q22", cat:"Исключения", q:"22) Какие важные исключения по адресу Абая 111 / Каирбекова 387/1?", a:"Абая 111: в блоке GPON отдельно упомянуты 1 Гбит роутер и SFU/ONU как отдельный кейс. Каирбекова 387/1: SFU/ONU встречается у некоторых абонентов." },
-
-    { id:"q23", cat:"Оплата/списания", q:"23) Какие типы списаний есть и к чему относятся (кратко)?", a:"Интернет/умный дом/аренда: ежемесячные пропорционально дням (ЕМС). Телевидение: ежемесячные фиксированные. Интернет на «Комфортный» может быть на ежедневных списаниях (ЕДС)." },
-    { id:"q24", cat:"Оплата/списания", q:"24) Особенность Качара по списаниям", a:"Качар: ежемесячные списания пропорционально дням «с 16 по 16»." },
-
-    { id:"q25", cat:"ТВ", q:"25) Абонплата ТВ: кабельное и IPTV Portal (и когда IPTV бесплатно)", a:"Кабельное ТВ: 2000 тг/мес. IPTV Portal: 2000 тг/мес. IPTV Portal бесплатно как бонус на тарифе Rakhmet (с 01.02.2026)." },
-    { id:"q26", cat:"ТВ", q:"26) Стоимость первичного подключения ТВ", a:"Первичное подключение ТВ: 2500 тг (расходные материалы + остаток на лицевой счёт в счёт оплаты тарифа)." },
-    { id:"q27", cat:"ТВ", q:"27) Что такое IPTV Portal и какие доп. возможности есть?", a:"IPTV Portal — просмотр ТВ через приложение по интернету. Доп. возможности: архив передач на сутки, пауза и перемотка." },
-    { id:"q28", cat:"ТВ", q:"28) Сколько архив IPTV?", a:"Архив IPTV: 1 сутки (24 часа)." },
-    { id:"q29", cat:"ТВ", q:"29) Случай “кабельное + IPTV вместе”: сколько платит абонент с интернетом Uplink и без него?", a:"Если подключены IPTV Portal + кабельное ТВ: без интернета Uplink — 4000 тг/мес; с интернетом Uplink — 2000 тг/мес." },
-    { id:"q30", cat:"ТВ/IPTV бесплатно", q:"30) В чём точная логика “IPTV бесплатно” после 01.02.2026 (особенно Мичуринское/Тобыл/Октябрьский)?", a:"С 01.02.2026 IPTV Portal бесплатный бонус только на тарифе Rakhmet. Для Мичуринского/Тобыла/Октябрьского: на других тарифах бесплатность сохраняется только у абонентов, подключённых до 01.02.2026; новым абонентам на других тарифах после 01.02.2026 бесплатно не будет." },
-
-    { id:"q31", cat:"Умный дом", q:"31) Что такое «Умный дом» и из чего состоит?", a:"«Умный дом» — доступ к системе «умный домофон» через программный комплекс и мобильное приложение «Мой умный дом» (ПО, базы данных и др.)." },
-    { id:"q32", cat:"Умный дом", q:"32) Ключевые функции «Умного дома» (коротко списком)", a:"Видеозвонок; открытие двери при звонке и без звонка; просмотр онлайн и архив до 5 дней; временная ссылка на 24 часа; «Свободные руки»; установка на неограниченное число устройств; «Гостевой доступ» (несколько адресов при оплате каждого)." },
-    { id:"q33", cat:"Умный дом", q:"33) Техусловия для «Умного дома» (что должно быть у абонента)?", a:"Должна быть установлена система «умный домофон»; у абонента приложение «Мой умный дом» (Android 6+ / iOS 14+); наличие действующего интернета любого оператора." },
-    { id:"q34", cat:"Умный дом/Костанай", q:"34) Тарифы и цены «Умный дом» (Костанай): 1000/500/350 и установки/ключи", a:"Костанай: «Умный дом» 1000 тг/мес (если нет интернета Uplink); «Умный дом» для наших интернет-абонентов 500 тг/мес; «Аналоговая трубка» 350 тг/мес. Установка панели 0. Трубка абонента 2000 (кроме домов-исключений). Трубка компании 6000 (кроме исключений). Ключ 1000." },
-    { id:"q35", cat:"Умный дом/Качар", q:"35) Тарифы и цены «Умный дом» (Качар): подключение до/после закрытия, тариф, годовой, ключ", a:"Качар: подключение услуги до/после закрытия панели 10 000 / 15 000 тг (включает 1 ключ). Тариф 800 тг/мес. Годовой 6000 тг/год (первая волна). Ключ 1000. Трубка абонента 2000, трубка компании 6000." },
-    { id:"q36", cat:"Умный дом/ключи", q:"36) Где и как приобрести ключи (Костанай: Чкалова 16/менеджер/доставка; Качар: Домовой/бригадир)", a:"Костанай: Чкалова 16; у менеджера в назначенное время/дату по адресу установки панели; доставка с момента установки до закрытия панели (обычно до 2 рабочих дней), после закрытия — низкий приоритет (если СИ по пути). Качар: ТЦ «Домовой», 3 этаж, бутик №7; у бригадира до закрытия панели." },
-    { id:"q37", cat:"Умный дом/ключи", q:"37) Как оплачиваются ключи и что делать, если нет лицевого счёта?", a:"Оплата ключей зачисляется на лицевой счёт услуги Интернет или «Умный дом». Если у абонента нет лицевого — в акте указывают 220860 и оплата поступает на него." },
-    { id:"q38", cat:"Умный дом/подключение подъезда", q:"38) Условия подключения подъезда к «Умному дому» (проценты 36 квартир / меньше 36)", a:"Если ≥36 квартир: 51% подключивших услугу на тарифах 500/1000 + 2/3 подъезда согласны (или 51% дома при установке на дом). Если <36 квартир: 80% подключивших + минимум 100 ключей на подъезд + 2/3 подъезда согласны (или 51% дома при установке на дом)." },
-
-    { id:"q39", cat:"VIP", q:"39) Что такое VIP-услуга и когда доступна?", a:"VIP — ряд бесплатных услуг, доступных абонентам на тарифе «Элитный» или при подключении Полугодового/Годового контракта." },
-    { id:"q40", cat:"VIP", q:"40) Пример VIP: восстановление ОС (цена/бесплатно) и смысл", a:"Восстановление операционной системы: 3500 тг на обычных условиях, бесплатно (0) на «Элитный» (и при полугодовом/годовом контракте)." },
-
-    { id:"q41", cat:"Белый IP", q:"41) Белый IP: где бесплатно и где платно (и что нужно сделать)?", a:"На ТП «Люкс» и «Элитный» белый IP бесплатно по запросу (как бонус). На ТП «Rakhmet» и «Комфортный» — +2000 тг к тарифу, нужно написать заявление." },
-
-    { id:"q42", cat:"Акции", q:"42) «Под ремонт»: что это и сроки (2+2)", a:"«Под ремонт»: клиент оплачивает тариф, лицевой счёт замораживается до окончания ремонта на срок до 2 месяцев с возможностью продления ещё на 2 по заявлению. Затем оформляют заявку на установку/активацию; после 2 месяцев автоматически списывается оплата за будущий месяц и услуга запускается." },
-    { id:"q43", cat:"Акции", q:"43) «Сертификат 2500» (Костанай): на что действует и как оформить?", a:"«Сертификат 2500» — скидка на первичное подключение кабельного ТВ: при одновременном подключении интернета и ТВ или при подключении ТВ для действующих интернет-абонентов. Менеджер указывает в заявке пометку «Сертификат 2500». Если материалов меньше — разница не компенсируется; если больше — клиент доплачивает." },
-    { id:"q44", cat:"Акции", q:"44) «Приведи друга» (сроки и условия бонуса)", a:"«Приведи друга» (01.01.2026–01.04.2026): действующий абонент интернета (от 1 месяца) или оплативший первый месяц передаёт другу номер договора; друг указывает его при оформлении. После подключения друга обоим начисляется 1 бонусный месяц." },
-    { id:"q45", cat:"Акции", q:"45) Полугодовой/годовой контракт (суть и что важно про досрочную смену тарифа)", a:"Полугодовой/годовой контракт: бонусные месяцы в подарок при полной предоплате. Действует только при единовременной оплате; можно продлевать новой предоплатой. При досрочной смене тарифа — перерасчёт по стандартным условиям без учёта бонусного периода; «добровольная заморозка» в период акции недоступна." },
-
-    { id:"q46", cat:"Роутеры/замена", q:"46) Политика замены роутеров: что в приоритете и когда новый?", a:"Приоритет — проверенные б/у роутеры после диагностики и одобрения IT. Новый роутер — если абонент подключён менее 3 месяцев, купил новый у компании и выявлен заводской/скрытый дефект; либо если нет исправных б/у и нужна срочная замена (редко, нежелательно)." },
-
-    { id:"q47", cat:"Термины", q:"47) Мбит и Мбайт: что меньше/что используется в тарифах?", a:"В тарифах скорость указывается в Мбит/с. Мбайт — объём данных, это другое. Для скорости всегда говорим Мбит/с." }
-  ];
-
-  // ========= ПРОГРЕСС =========
-  const STORAGE_KEY = "uplink_exam_trainer_mobile_v2";
-  const now = () => Date.now();
-
-  function loadState(){
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if(!raw){
-      const stats = {};
-      for(const it of QUESTIONS){
-        stats[it.id] = { seen:0, streak:0, ease:2.0, interval:0, due:0, lastScore:0 };
-      }
-      return {
-        idx: 0,
-        queue: "unlearned",
-        mode: "train",
-        stats,
-        hidden: {} // 2) удалённые вопросы (до сброса)
-      };
+function parseFrontMatterBlock(block, fileName, index){
+  const lines = block.trim().split(/\r?\n/);
+  const data = {};
+  let current = null;
+  for(const raw of lines){
+    const line = raw.trimEnd();
+    if(!line.trim() || line.trim().startsWith('<!--')) continue;
+    const m = line.match(/^([А-Яа-яA-Za-zЁё_]+):\s*(.*)$/);
+    if(m){
+      current = m[1].toLowerCase();
+      data[current] = m[2].trim();
+    } else if(current){
+      data[current] += '\n' + line.trim();
     }
+  }
+
+  const req = ['id','тема','тип','сложность','вопрос','варианты','ответ','объяснение'];
+  const missing = req.filter(k => !data[k]);
+  if(missing.length) throw new Error(`вопрос ${index}: нет полей ${missing.join(', ')}`);
+
+  const options = data['варианты'].split(/\n|;/).map(s => s.trim()).filter(Boolean).map(s => s.replace(/^[-*]\s*/,''));
+  if(options.length < 2) throw new Error(`вопрос ${index}: меньше двух вариантов`);
+
+  let answers = data['ответ'].split('|').map(s => s.trim()).filter(Boolean);
+  const type = data['тип'].toLowerCase();
+  if(type === 'single' && answers.length !== 1) throw new Error(`вопрос ${index}: single должен иметь один ответ`);
+  for(const a of answers) if(!options.includes(a)) throw new Error(`вопрос ${index}: ответ "${a}" отсутствует среди вариантов`);
+
+  return {
+    id:data.id.trim(),
+    topic:data['тема'].trim(),
+    subtopic:(data['подтема']||'').trim(),
+    type,
+    difficulty:data['сложность'].trim(),
+    question:data['вопрос'].trim(),
+    options,
+    answers,
+    explanation:data['объяснение'].trim(),
+    source:(data['источник']||'').trim(),
+    version:parseInt(data['версия']||'1',10)||1,
+    file:fileName
+  };
+}
+
+function parseMarkdown(text, fileName){
+  const chunks = text.split(/^---\s*$/m).map(x=>x.trim()).filter(Boolean);
+  const out=[];
+  chunks.forEach((c,i)=>{
+    // skip optional title/header chunk
+    if(!/^id\s*:/mi.test(c)) return;
+    out.push(parseFrontMatterBlock(c,fileName,i+1));
+  });
+  return out;
+}
+
+async function loadBank(){
+  const jobs=[];
+  for(let i=1;i<=MAX_FILES;i++){
+    const file=`test${i}.md`;
+    jobs.push(fetch(QUESTIONS_DIR+file,{cache:'no-store'})
+      .then(async r=>{
+        if(r.status===404) return {file,missing:true};
+        if(!r.ok) throw new Error(`${file}: HTTP ${r.status}`);
+        return {file,text:await r.text()};
+      })
+      .catch(e=>({file,error:e.message}))
+    );
+  }
+  const results=await Promise.all(jobs);
+  const ids=new Set();
+  bank=[]; loadState={loaded:[],missing:[],errors:[]};
+
+  for(const r of results){
+    if(r.missing){ loadState.missing.push(r.file); continue; }
+    if(r.error){ loadState.errors.push(r.error); continue; }
     try{
-      const parsed = JSON.parse(raw);
-      if(!parsed.stats) parsed.stats = {};
-      if(!parsed.hidden) parsed.hidden = {};
-      for(const it of QUESTIONS){
-        if(!parsed.stats[it.id]){
-          parsed.stats[it.id] = { seen:0, streak:0, ease:2.0, interval:0, due:0, lastScore:0 };
-        }
+      const qs=parseMarkdown(r.text,r.file);
+      for(const q of qs){
+        if(ids.has(q.id)){ loadState.errors.push(`${r.file}: дубликат ID ${q.id}`); continue; }
+        ids.add(q.id); bank.push(q);
       }
-      if(typeof parsed.idx !== "number") parsed.idx = 0;
-      if(!parsed.queue) parsed.queue = "order";
-      if(!parsed.mode) parsed.mode = "train";
-      return parsed;
-    }catch(e){
-      localStorage.removeItem(STORAGE_KEY);
-      return loadState();
+      loadState.loaded.push({file:r.file,count:qs.length});
+    }catch(e){ loadState.errors.push(`${r.file}: ${e.message}`); }
+  }
+  renderHome();
+}
+
+function getRec(q){
+  const p=progress[q.id]||{};
+  if(p.version!==q.version) return {version:q.version,seen:0,correct:0,wrong:0,streak:0,last:null};
+  return {version:q.version,seen:p.seen||0,correct:p.correct||0,wrong:p.wrong||0,streak:p.streak||0,last:p.last||null};
+}
+function isSeen(q){ return getRec(q).seen>0; }
+function hasError(q){ return getRec(q).wrong>0; }
+function isMastered(q){ const r=getRec(q); return r.streak>=2; }
+
+function shuffle(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+
+function balancedPick(source,count){
+  const groups={};
+  source.forEach(q=>(groups[q.topic]??=[]).push(q));
+  Object.values(groups).forEach(a=>{ const b=shuffle(a); a.splice(0,a.length,...b); });
+  const names=shuffle(Object.keys(groups));
+  const out=[];
+  let moved=true;
+  while(out.length<count && moved){
+    moved=false;
+    for(const n of names){
+      if(out.length>=count) break;
+      if(groups[n].length){ out.push(groups[n].shift()); moved=true; }
     }
   }
+  return out;
+}
 
-  function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
-
-  function toast(msg){
-    const el = document.getElementById("toast");
-    el.innerHTML = msg;
-    el.style.display = "block";
-    clearTimeout(toast._t);
-    toast._t = setTimeout(()=> el.style.display="none", 2200);
+function chooseQuestions(count,mode='new'){
+  let source;
+  if(mode==='errors') source=bank.filter(hasError);
+  else{
+    const unseen=bank.filter(q=>!isSeen(q));
+    const seenNotMastered=bank.filter(q=>isSeen(q)&&!isMastered(q));
+    source=[...balancedPick(unseen,unseen.length),...balancedPick(seenNotMastered,seenNotMastered.length)];
   }
+  return balancedPick(source,Math.min(count,source.length));
+}
 
-  // Простая система повторения
-  function applyReview(qid, score){
-    const s = state.stats[qid];
-    s.seen += 1;
-    s.lastScore = score;
-
-    const MIN_1 = 5 * 60 * 1000;
-    const MIN_2 = 30 * 60 * 1000;
-    const MIN_3 = 8 * 60 * 60 * 1000;
-
-    if(score === 1){
-      s.streak = 0;
-      s.ease = Math.max(1.3, s.ease - 0.2);
-      s.interval = MIN_1;
-    }else if(score === 2){
-      s.streak = Math.max(0, s.streak - 1);
-      s.ease = Math.max(1.3, s.ease - 0.05);
-      s.interval = Math.max(MIN_2, Math.round((s.interval || MIN_2) * 1.5));
-    }else if(score === 3){
-      s.streak += 1;
-      s.ease = Math.min(2.8, s.ease + 0.08);
-      const base = s.interval || MIN_3;
-      s.interval = Math.max(MIN_3, Math.round(base * s.ease));
-    }
-    s.due = now() + s.interval;
+function startSession(count,mode='new'){
+  const questions=chooseQuestions(count,mode);
+  if(!questions.length){
+    alert(mode==='errors'?'Нет вопросов с ошибками.':'Новых вопросов не осталось. Можно повторить ошибки или начать новый цикл после очистки прогресса.');
+    return;
   }
+  session={questions,index:0,answers:{},mode};
+  show('quiz'); renderQuestion();
+}
 
-  // ========= UI =========
-  const $ = (id) => document.getElementById(id);
-  const state = loadState();
+function renderQuestion(){
+  const q=session.questions[session.index];
+  document.getElementById('counter').textContent=`${session.index+1} / ${session.questions.length}`;
+  document.getElementById('quizProgress').style.width=`${(session.index+1)/session.questions.length*100}%`;
+  document.getElementById('qmeta').textContent=[q.topic,q.subtopic,q.difficulty].filter(Boolean).join(' · ');
+  document.getElementById('question').textContent=q.question;
+  const wrap=document.getElementById('options'); wrap.innerHTML='';
+  const selected=session.answers[q.id]||[];
+  q.options.forEach((opt,i)=>{
+    const b=document.createElement('button'); b.className='option'+(selected.includes(opt)?' selected':'');
+    b.innerHTML=`<span class="letter">${String.fromCharCode(65+i)}</span><span>${escapeHtml(opt)}</span>`;
+    b.onclick=()=>{
+      let cur=session.answers[q.id]||[];
+      if(q.type==='multiple'){
+        cur=cur.includes(opt)?cur.filter(x=>x!==opt):[...cur,opt];
+      }else cur=[opt];
+      session.answers[q.id]=cur; renderQuestion();
+    };
+    wrap.appendChild(b);
+  });
+  document.getElementById('prev').disabled=session.index===0;
+  document.getElementById('next').textContent=session.index===session.questions.length-1?'Завершить':'Далее';
+}
 
-  let showAnswer = false;
-  let pool = [];
-
-  function escapeHtml(s){
-    return String(s)
-      .replaceAll("&","&amp;")
-      .replaceAll("<","&lt;")
-      .replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;");
+function finishSession(){
+  const results=[];
+  for(const q of session.questions){
+    const chosen=session.answers[q.id]||[];
+    const expected=[...q.answers].sort();
+    const actual=[...chosen].sort();
+    const ok=expected.length===actual.length&&expected.every((v,i)=>v===actual[i]);
+    const old=getRec(q);
+    progress[q.id]={
+      version:q.version,
+      seen:old.seen+1,
+      correct:old.correct+(ok?1:0),
+      wrong:old.wrong+(ok?0:1),
+      streak:ok?old.streak+1:0,
+      last:new Date().toISOString()
+    };
+    results.push({q,chosen,ok});
   }
+  saveProgress();
+  session.results=results;
+  renderResult();
+}
 
-  function formatAnswer(a){
-    const lines = String(a).split("\n").map(x=>x.trim()).filter(Boolean);
-    if(lines.length <= 1) return escapeHtml(a);
-    return "<div>" + lines.map(l=>`<div style="margin:6px 0;">• ${escapeHtml(l)}</div>`).join("") + "</div>";
+function renderResult(){
+  show('result');
+  const good=session.results.filter(x=>x.ok).length;
+  document.getElementById('resultScore').textContent=`${good} / ${session.results.length}`;
+  document.getElementById('resultSub').textContent=`Правильных ответов: ${Math.round(good/session.results.length*100)}%. Общий прогресс сохранён локально.`;
+
+  const per={};
+  session.results.forEach(r=>{
+    per[r.q.topic]??={ok:0,total:0};
+    per[r.q.topic].total++; if(r.ok) per[r.q.topic].ok++;
+  });
+  const tr=document.getElementById('topicResults'); tr.innerHTML='';
+  Object.entries(per).forEach(([name,v])=>{
+    const d=document.createElement('div'); d.className='topic';
+    d.innerHTML=`<span>${escapeHtml(name)}</span><span>${v.ok} / ${v.total}</span>`;
+    tr.appendChild(d);
+  });
+
+  const rev=document.getElementById('review'); rev.innerHTML='';
+  session.results.filter(r=>!r.ok).forEach(r=>{
+    const d=document.createElement('div'); d.className='reviewitem bad';
+    d.innerHTML=`<h3>${escapeHtml(r.q.question)}</h3>
+      <p><b>Ваш ответ:</b> ${escapeHtml((r.chosen.length?r.chosen:['Нет ответа']).join(', '))}</p>
+      <p><b>Правильно:</b> ${escapeHtml(r.q.answers.join(', '))}</p>
+      <p>${escapeHtml(r.q.explanation)}</p>
+      <div class="source">${escapeHtml([r.q.source,r.q.file].filter(Boolean).join(' · '))}</div>`;
+    rev.appendChild(d);
+  });
+  renderHomeStatsOnly();
+}
+
+function renderHomeStatsOnly(){
+  const total=bank.length;
+  const done=bank.filter(isSeen).length;
+  const errors=bank.filter(hasError).length;
+  const pct=total?Math.round(done/total*100):0;
+  document.getElementById('sDone').textContent=done;
+  document.getElementById('sTotal').textContent=total;
+  document.getElementById('sErrors').textContent=errors;
+  document.getElementById('sPct').textContent=pct+'%';
+  document.getElementById('mainProgress').style.width=pct+'%';
+  document.getElementById('progressText').textContent=`${done} из ${total} уникальных вопросов`;
+  document.getElementById('bankTop').textContent=`Банк: ${total} вопросов`;
+}
+
+function renderHome(){
+  renderHomeStatsOnly();
+  const bi=document.getElementById('bankInfo'); bi.innerHTML='';
+  const title=document.createElement('div'); title.className='small'; title.style.marginBottom='7px';
+  title.textContent=`Загружено файлов: ${loadState.loaded.length} из ${MAX_FILES}`;
+  bi.appendChild(title);
+  loadState.loaded.forEach(x=>{
+    const d=document.createElement('div'); d.className='bankrow';
+    d.innerHTML=`<span class="name">${escapeHtml(x.file)}</span><span class="ok">${x.count} вопросов</span>`;
+    bi.appendChild(d);
+  });
+  const lw=document.getElementById('loadWarnings'); lw.innerHTML='';
+  if(loadState.errors.length){
+    const d=document.createElement('div'); d.className='notice';
+    d.innerHTML='<b>Есть ошибки загрузки:</b><br>'+loadState.errors.map(escapeHtml).join('<br>');
+    lw.appendChild(d);
   }
+  document.getElementById('start30').disabled=!bank.length;
+  document.getElementById('start10').disabled=!bank.length;
+  document.getElementById('start50').disabled=!bank.length;
+  document.getElementById('repeatErrors').disabled=!bank.some(hasError);
+}
 
-  function isHidden(qid){ return !!state.hidden[qid]; }
-  function isMastered(qid){ return (state.stats[qid].streak || 0) >= 3; }
-  function isDue(qid){ return (state.stats[qid].due || 0) <= now(); }
+function show(id){
+  ['home','quiz','result'].forEach(x=>document.getElementById(x).classList.toggle('hidden',x!==id));
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
-  function buildPool(){
-    // 3) Вернули выбор порядка/очереди
-    const visible = QUESTIONS.filter(q => !isHidden(q.id));
+document.getElementById('start10').onclick=()=>startSession(10);
+document.getElementById('start30').onclick=()=>startSession(30);
+document.getElementById('start50').onclick=()=>startSession(50);
+document.getElementById('repeatErrors').onclick=()=>startSession(30,'errors');
+document.getElementById('prev').onclick=()=>{ if(session.index>0){session.index--;renderQuestion();} };
+document.getElementById('next').onclick=()=>{
+  const q=session.questions[session.index];
+  if(!(session.answers[q.id]||[]).length){ alert('Выберите ответ.'); return; }
+  if(session.index===session.questions.length-1) finishSession(); else {session.index++;renderQuestion();}
+};
+document.getElementById('exitQuiz').onclick=()=>{ if(confirm('Выйти из текущей сессии? Ответы этой сессии не будут сохранены.')){session=null;show('home');renderHome();} };
+document.getElementById('homeBtn').onclick=()=>{session=null;show('home');renderHome();};
+document.getElementById('continueBtn').onclick=()=>{show('home');renderHome();startSession(30);};
 
-    // 4) Пробное тестирование: строго по порядку от первого до последнего
-    if(state.mode === "trial"){
-      return visible.slice(); // уже в исходном порядке
-    }
-
-    // Тренировка: очередь по выбору
-    if(state.queue === "order"){
-      return visible.slice(); // по номеру
-    }
-    if(state.queue === "due"){
-      // только просроченные, но порядок — по номеру (не сортируем)
-      return visible.filter(q => isDue(q.id));
-    }
-    if(state.queue === "unlearned"){
-      return visible.filter(q => !isMastered(q.id));
-    }
-    return visible.slice(); // all
-  }
-
-  function current(){
-    pool = buildPool();
-    if(pool.length === 0) return null;
-    if(state.idx >= pool.length) state.idx = 0;
-    return pool[state.idx];
-  }
-
-  function resetView(){
-    showAnswer = false;
-    $("answer").style.display = "none";
-    $("answer").innerHTML = "";
-    $("answerHiddenHint").style.display = "block";
-    $("btnToggleAnswer").textContent = "Показать";
-    $("btnToggleAnswer2").textContent = "Показать ответ";
-  }
-
-  function setPillState(cur){
-    const pill = $("pillState");
-    pill.classList.remove("warn","ok");
-
-    if(!cur){
-      pill.textContent = "—";
-      return;
-    }
-
-    // 6) "повторить" — оранжевым до выучивания, зелёным после
-    const mastered = isMastered(cur.id);
-    if(mastered){
-      pill.textContent = "выучено";
-      pill.classList.add("ok");
-      return;
-    }
-    // не выучено
-    if(isDue(cur.id)){
-      pill.textContent = "повторить";
-      pill.classList.add("warn");
-    }else{
-      // отложено (но всё равно не выучено) — тоже оранжевое, чтобы не выглядело как обычная серая плашка
-      const d = new Date(state.stats[cur.id].due || 0);
-      pill.textContent = "повторить позже: " + d.toLocaleString("ru-RU");
-      pill.classList.add("warn");
-    }
-  }
-
-  function render(){
-    // 5) Кнопка "Сначала" только в режиме "По порядку" (и только в тренировке)
-    const showToStart = (state.mode === "train" && state.queue === "order");
-    $("btnToStart").style.display = showToStart ? "inline-flex" : "none";
-
-    // В пробном тестировании — это именно тест, поэтому оценки оставляем, но показываем прогресс 1/N
-    const cur = current();
-    if(!cur){
-      $("question").textContent = "В этой очереди нет вопросов (или всё убрано).";
-      $("pillProgress").textContent = "—";
-      $("pillCat").textContent = "Категория: —";
-      setPillState(null);
-      $("qNum").textContent = "#—";
-      $("qSeen").textContent = "просмотров: —";
-      $("qStreak").textContent = "серия: —";
-      resetView();
-      return;
-    }
-
-    const pos = state.idx + 1;
-    const total = pool.length;
-
-    // 4) формат 1/48
-    $("pillProgress").textContent = pos + "/" + total;
-    $("pillCat").textContent = "Категория: " + cur.cat;
-
-    setPillState(cur);
-
-    // номер вопроса = исходный номер в базе (по QUESTIONS)
-    const baseNum = QUESTIONS.findIndex(x=>x.id===cur.id) + 1;
-    $("qNum").textContent = "#" + String(baseNum).padStart(2,"0");
-
-    const st = state.stats[cur.id];
-    $("qSeen").textContent = "просмотров: " + (st.seen || 0);
-    $("qStreak").textContent = "серия: " + (st.streak || 0);
-
-    $("question").textContent = cur.q;
-
-    if(showAnswer){
-      $("answer").innerHTML = formatAnswer(cur.a);
-    }
-  }
-
-  function move(delta){
-    pool = buildPool();
-    if(pool.length === 0) return;
-    state.idx = (state.idx + delta + pool.length) % pool.length;
-    saveState();
-    resetView();
-    render();
-  }
-
-  function toggleAnswer(){
-    const cur = current(); if(!cur) return;
-    showAnswer = !showAnswer;
-    if(showAnswer){
-      $("answer").innerHTML = formatAnswer(cur.a);
-      $("answer").style.display = "block";
-      $("answerHiddenHint").style.display = "none";
-      $("btnToggleAnswer").textContent = "Скрыть";
-      $("btnToggleAnswer2").textContent = "Скрыть ответ";
-    }else{
-      resetView();
-    }
-  }
-
-  function review(score){
-    const cur = current(); if(!cur) return;
-
-    applyReview(cur.id, score);
-    saveState();
-
-    toast(score===3 ? "Записал: ЗНАЮ ✅" : score===2 ? "Записал: ЧАСТИЧНО ⚠️" : "Записал: НЕ ЗНАЮ ❌");
-
-    resetView();
-
-    // В тесте — просто идём дальше по порядку
-    // В тренировке — тоже дальше по очереди (как сейчас собрана)
-    move(1);
-  }
-
-  function removeCurrent(){
-    const cur = current(); if(!cur) return;
-    if(!confirm("Убрать этот вопрос до сброса?")) return;
-    state.hidden[cur.id] = true;
-    saveState();
-    toast("Убрал вопрос из очереди.");
-    // если стало пусто — просто перерисуем
-    pool = buildPool();
-    if(pool.length === 0){
-      state.idx = 0;
-      saveState();
-      resetView();
-      render();
-      return;
-    }
-    // остаёмся на том же индексе, но там уже будет следующий
-    if(state.idx >= pool.length) state.idx = 0;
-    saveState();
-    resetView();
-    render();
-  }
-
-  // ========= EVENTS =========
-  $("queue").value = state.queue;
-  $("mode").value = state.mode;
-
-  $("queue").onchange = (e) => {
-    state.queue = e.target.value;
-    state.idx = 0;
-    saveState();
-    resetView();
-    render();
-  };
-
-  $("mode").onchange = (e) => {
-    state.mode = e.target.value;
-
-    // при входе в "Пробное" — всегда в начало
-    state.idx = 0;
-
-    saveState();
-    resetView();
-    render();
-    toast(state.mode === "trial" ? "Пробное тестирование: по порядку." : "Тренировка: выбери очередь.");
-  };
-
-  $("btnToStart").onclick = () => {
-    state.idx = 0;
-    saveState();
-    resetView();
-    render();
-    toast("Сначала.");
-  };
-
-  $("btnToggleAnswer").onclick = toggleAnswer;
-  $("btnToggleAnswer2").onclick = toggleAnswer;
-
-  $("btnPrev").onclick = () => move(-1);
-  $("btnNext").onclick = () => move(1);
-
-  $("btnAgain").onclick = () => review(1);
-  $("btnHard").onclick  = () => review(2);
-  $("btnGood").onclick  = () => review(3);
-
-  $("btnRemove").onclick = removeCurrent;
-
-  $("btnReset").onclick = () => {
-    if(!confirm("Сбросить прогресс и вернуть все убранные вопросы?")) return;
-    localStorage.removeItem(STORAGE_KEY);
-    location.reload();
-  };
-
-  // ========= INIT =========
-  render();
-  toast("Готово. Выбери очередь/режим и работай. Вопросов: " + QUESTIONS.length + ".");
-})();
+loadBank();
 </script>
 </body>
 </html>
-
