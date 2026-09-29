@@ -152,6 +152,7 @@ button{font:inherit}
       <button class="btn" id="start50">50 вопросов</button>
       <button class="btn" id="startInfinite">∞ Бесконечный режим</button>
       <button class="btn ghost" id="repeatErrors">Повторить ошибки</button>
+      <button class="btn ghost danger" id="resetProgress">Сбросить прогресс</button>
     </div>
     <div id="loadWarnings"></div>
 
@@ -570,6 +571,7 @@ function renderHome(){
   document.getElementById('start50').disabled=!bank.length;
   document.getElementById('startInfinite').disabled=!bank.length;
   document.getElementById('repeatErrors').disabled=!bank.some(hasError);
+  document.getElementById('resetProgress').disabled=!Object.keys(progress).length;
 }
 
 function renderBankPage(){
@@ -598,6 +600,16 @@ document.getElementById('start30').onclick=()=>startSession(30);
 document.getElementById('start50').onclick=()=>startSession(50);
 document.getElementById('startInfinite').onclick=()=>startSession(Infinity,'infinite');
 document.getElementById('repeatErrors').onclick=()=>startSession(30,'errors');
+
+document.getElementById('resetProgress').onclick=()=>{
+  if(!confirm('Сбросить весь прогресс? Будут удалены результаты, ошибки и статистика по всем вопросам.')){
+    return;
+  }
+  progress={};
+  localStorage.removeItem(STORAGE_KEY);
+  session=null;
+  renderHome();
+};
 
 document.getElementById('bankTop').onclick=()=>{renderBankPage();show('bankPage');};
 document.getElementById('bankBack').onclick=()=>{show('home');renderHome();};
