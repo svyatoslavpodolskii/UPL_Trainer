@@ -102,6 +102,20 @@ button{font:inherit}
 .fileIcon{width:38px;height:38px;border-radius:12px;background:#eef6f1;display:grid;place-items:center;font-weight:800;color:var(--accent)}
 .fileMeta{min-width:0}.fileName{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.fileSub{font-size:12px;color:var(--muted);margin-top:2px}
 .footer{text-align:center;color:#8a8a8f;font-size:12px;margin-top:28px;letter-spacing:.1px}
+
+.feedback{
+  margin-top:18px;padding:16px 18px;border-radius:18px;border:1px solid var(--line);
+  background:rgba(255,255,255,.78);text-align:left
+}
+.feedback.good{background:#f3fbf6;border-color:#b9dfc7}
+.feedback.bad{background:#fff7f7;border-color:#e8bebe}
+.feedbackTitle{font-weight:750;margin-bottom:7px}
+.feedbackAnswer{font-size:14px;margin-bottom:6px}
+.feedbackExplain{font-size:13px;color:var(--muted);line-height:1.5}
+.option.correct{border-color:#8fcda8;background:#f3fbf6;box-shadow:0 0 0 4px rgba(25,135,84,.08)}
+.option.wrong{border-color:#e1a8a8;background:#fff7f7;box-shadow:0 0 0 4px rgba(198,60,60,.07)}
+.option.locked{cursor:default}
+
 @media(max-width:720px){
   .shell{padding:14px 14px 72px}.card{padding:20px}.hero{padding:36px 20px}.hero h1,.pageTitle{font-size:34px}
   .stats{grid-template-columns:1fr 1fr}.question{font-size:24px}.fileGrid{grid-template-columns:1fr}
@@ -170,6 +184,7 @@ button{font:inherit}
     <div class="qmeta" id="qmeta"></div>
     <h2 class="question" id="question"></h2>
     <div class="options" id="options"></div>
+    <div id="feedback" class="feedback hidden"></div>
     <div class="nav">
       <button class="btn" id="prev">Назад</button>
       <button class="btn primary" id="next">Далее</button>
@@ -372,8 +387,9 @@ function persistAnsweredSession(){
   if(!session) return 0;
   let saved=0;
   for(const q of session.questions){
-    const chosen=session.answers[q.id];
-    if(!chosen || !chosen.length || session.savedIds.has(q.id)) continue;
+    const rec=session.answers[q.id];
+    const chosen=rec?.chosen||[];
+    if(!rec?.submitted || !chosen.length || session.savedIds.has(q.id)) continue;
     const expected=[...q.answers].sort();
     const actual=[...chosen].sort();
     const ok=expected.length===actual.length&&expected.every((v,i)=>v===actual[i]);
@@ -395,33 +411,97 @@ function persistAnsweredSession(){
 
 function renderQuestion(){
   const q=session.questions[session.index];
+  const answered=!!session.answers[q.id]?.submitted;
+  const selected=answered ? session.answers[q.id].chosen : (session.answers[q.id]?.chosen||[]);
+
   document.getElementById('counter').textContent=session.mode==='infinite' ? `Вопрос ${session.index+1} · ∞` : `${session.index+1} / ${session.questions.length}`;
   document.getElementById('quizProgress').style.width=session.mode==='infinite' ? '100%' : `${(session.index+1)/session.questions.length*100}%`;
   document.getElementById('qmeta').textContent=[q.topic,q.subtopic,q.difficulty].filter(Boolean).join(' · ');
   document.getElementById('question').textContent=q.question;
-  const wrap=document.getElementById('options'); wrap.innerHTML='';
-  const selected=session.answers[q.id]||[];
+
+  const wrap=document.getElementById('options');
+  wrap.innerHTML='';
+
   q.options.forEach((opt,i)=>{
-    const b=document.createElement('button'); b.className='option'+(selected.includes(opt)?' selected':'');
+    const b=document.createElement('button');
+    let cls='option';
+    if(selected.includes(opt)) cls+=' selected';
+
+    if(answered){
+      cls+=' locked';
+      if(q.answers.includes(opt)) cls+=' correct';
+      else if(selected.includes(opt)) cls+=' wrong';
+    }
+
+    b.className=cls;
     b.innerHTML=`<span class="letter">${String.fromCharCode(65+i)}</span><span>${escapeHtml(opt)}</span>`;
-    b.onclick=()=>{
-      let cur=session.answers[q.id]||[];
-      if(q.type==='multiple'){
-        cur=cur.includes(opt)?cur.filter(x=>x!==opt):[...cur,opt];
-      }else cur=[opt];
-      session.answers[q.id]=cur; renderQuestion();
-    };
+    b.disabled=answered;
+
+    if(!answered){
+      b.onclick=()=>{
+        let cur=session.answers[q.id]?.chosen||[];
+        if(q.type==='multiple'){
+          cur=cur.includes(opt)?cur.filter(x=>x!==opt):[...cur,opt];
+          session.answers[q.id]={chosen:cur,submitted:false};
+          renderQuestion();
+        }else{
+          session.answers[q.id]={chosen:[opt],submitted:false};
+          submitCurrentAnswer();
+        }
+      };
+    }
     wrap.appendChild(b);
   });
+
+  const fb=document.getElementById('feedback');
+  fb.className='feedback hidden';
+  fb.innerHTML='';
+
+  if(answered){
+    const chosen=session.answers[q.id].chosen||[];
+    const expected=[...q.answers].sort();
+    const actual=[...chosen].sort();
+    const ok=expected.length===actual.length&&expected.every((v,i)=>v===actual[i]);
+
+    fb.className='feedback '+(ok?'good':'bad');
+    fb.innerHTML=`
+      <div class="feedbackTitle">${ok?'Правильно':'Неверно'}</div>
+      <div class="feedbackAnswer"><b>Правильный ответ:</b> ${escapeHtml(q.answers.join(', '))}</div>
+      <div class="feedbackExplain">${escapeHtml(q.explanation)}</div>
+    `;
+  }
+
   document.getElementById('prev').disabled=session.index===0;
-  document.getElementById('next').textContent=session.mode==='infinite' ? 'Далее' : (session.index===session.questions.length-1?'Завершить':'Далее');
+  const next=document.getElementById('next');
+
+  if(!answered && q.type==='multiple'){
+    next.textContent='Проверить';
+  }else if(session.mode==='infinite'){
+    next.textContent=answered?'Далее':'Проверить';
+  }else{
+    next.textContent=answered
+      ? (session.index===session.questions.length-1?'Завершить':'Далее')
+      : 'Проверить';
+  }
+}
+
+function submitCurrentAnswer(){
+  const q=session.questions[session.index];
+  const rec=session.answers[q.id];
+  const chosen=rec?.chosen||[];
+  if(!chosen.length){ alert('Выберите ответ.'); return false; }
+  session.answers[q.id]={chosen:[...chosen],submitted:true};
+  persistAnsweredSession();
+  renderQuestion();
+  return true;
 }
 
 function finishSession(){
   const results=[];
   for(const q of session.questions){
-    const chosen=session.answers[q.id]||[];
-    if(!chosen.length) continue;
+    const rec=session.answers[q.id];
+    const chosen=rec?.chosen||[];
+    if(!rec?.submitted || !chosen.length) continue;
     const expected=[...q.answers].sort();
     const actual=[...chosen].sort();
     const ok=expected.length===actual.length&&expected.every((v,i)=>v===actual[i]);
@@ -525,19 +605,27 @@ document.getElementById('bankBack').onclick=()=>{show('home');renderHome();};
 document.getElementById('prev').onclick=()=>{ if(session.index>0){session.index--;renderQuestion();} };
 document.getElementById('next').onclick=()=>{
   const q=session.questions[session.index];
-  if(!(session.answers[q.id]||[]).length){ alert('Выберите ответ.'); return; }
+  const rec=session.answers[q.id];
+
+  if(!rec?.submitted){
+    submitCurrentAnswer();
+    return;
+  }
+
   if(session.mode==='infinite'){
     if(session.index===session.questions.length-1) extendInfiniteSession();
-    session.index++; renderQuestion();
+    session.index++;
+    renderQuestion();
   }else if(session.index===session.questions.length-1){
     finishSession();
   }else{
-    session.index++; renderQuestion();
+    session.index++;
+    renderQuestion();
   }
 };
 
 document.getElementById('exitQuiz').onclick=()=>{
-  const answered=session ? Object.values(session.answers).filter(a=>a&&a.length).length : 0;
+  const answered=session ? Object.values(session.answers).filter(a=>a?.submitted).length : 0;
   const msg=answered
     ? `Выйти из теста? Результаты ${answered} отвеченных вопросов будут сохранены.`
     : 'Выйти из теста?';
